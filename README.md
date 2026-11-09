@@ -1,6 +1,6 @@
 # Diagnostic assisté sur radiographie thoracique : pipeline DataOps et fusion multimodale
 
-Module Deep Learning, projet en binôme, Tâche 3. Entrée multimodale : une radiographie
+Module Deep Learning, Tâche 3. Équipe : Abir Mhamdi, Mariem Tanabene, Nouhe Laaroussi. Entrée multimodale : une radiographie
 thoracique (NIH ChestX-ray14) et les données cliniques associées (âge, sexe, vue AP/PA,
 numéro de suivi). Sortie visée : 14 pathologies, multi-label.
 

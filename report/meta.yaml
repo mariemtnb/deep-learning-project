@@ -1,4 +1,4 @@
-# Remplacez par les noms du binôme puis relancez : python report/build_report.py
-auteurs: "[Prénom Nom 1] · [Prénom Nom 2]"
+# Après modification, relancez : python report/build_report.py
+auteurs: "Abir Mhamdi · Mariem Tanabene · Nouhe Laaroussi"
 depot: "github.com/mariemtnb/deep-learning-project"
 date: "Novembre 2026"

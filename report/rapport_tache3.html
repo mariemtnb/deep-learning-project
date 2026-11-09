@@ -42,12 +42,12 @@ ol.ref { font-size: 9pt; padding-left: 20pt; } ol.ref li { margin-bottom: 3pt; t
 <body>
 
 <section class="cover">
-  <div class="top">Module Deep Learning · Projet en binôme · A.U. 2026-2027</div>
+  <div class="top">Module Deep Learning · Projet en équipe · A.U. 2026-2027</div>
   <div>
     <h0>Diagnostic assisté sur radiographie thoracique</h0>
     <div class="sub">Tâche 3 : automatisation DataOps du pipeline<br>et étude de la fusion image + données cliniques</div>
     <table>
-      <tr><td><b>Binôme</b></td><td>{{AUTEURS}}</td></tr>
+      <tr><td><b>Équipe</b></td><td>{{AUTEURS}}</td></tr>
       <tr><td><b>Encadrante</b></td><td>Aroua Hedhili</td></tr>
       <tr><td><b>Dépôt</b></td><td>{{DEPOT}} (tag <code>task3</code>)</td></tr>
       <tr><td><b>Date</b></td><td>{{DATE}}</td></tr>
@@ -217,7 +217,7 @@ rien exécuter.</p>
 l'application Drive. DVC le voit comme un dossier local. Chaque membre indique son propre chemin avec
 <code>dvc remote modify --local shared url …</code>, écrit dans <code>.dvc/config.local</code> qui n'est
 pas versionné. Nous avons écarté le remote Google Drive natif de DVC : depuis 2024 il demande de créer
-son propre projet Google Cloud et un compte de service, ce qui est disproportionné pour un binôme. Pour un
+son propre projet Google Cloud et un compte de service, ce qui est disproportionné pour une équipe de trois. Pour un
 tiers, la procédure complète est dans le README : <code>git clone</code>, réglage du remote,
 <code>dvc pull</code>, puis téléchargement des images depuis Kaggle. Sans accès au dossier partagé, il
 suffit de copier les quatre fichiers de métadonnées du téléchargement NIH dans <code>data/raw/nih/</code> :
