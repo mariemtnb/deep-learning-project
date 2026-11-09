@@ -1,0 +1,18 @@
+{
+  "stage": "examples",
+  "started_at": "2026-11-09T10:02:50",
+  "git_commit": "unknown",
+  "config": "configs/params.yaml",
+  "inputs": {
+    "data/processed/dataset.parquet": "d58e942c28f13a44325bc81d4c53f046"
+  },
+  "outputs": {
+    "outputs/examples.json": "24a25f29ca17e91f05160f2c0bb0a3c4"
+  },
+  "stats": {
+    "nih_examples": 4,
+    "kb": 135
+  },
+  "status": "ok",
+  "duration_s": 0.32
+}

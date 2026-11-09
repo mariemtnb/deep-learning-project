@@ -1,0 +1,21 @@
+{
+  "stage": "index_images",
+  "started_at": "2026-11-09T10:02:22",
+  "git_commit": "unknown",
+  "config": "configs/params.yaml",
+  "inputs": {},
+  "outputs": {
+    "data/interim/image_index.parquet": "925bc9b22cfe91e3c6d29436f8136cbc",
+    "data/interim/image_checks.parquet": "0e59318845840b7a1ed1733c71f8f28e",
+    "data/interim/pneumonia_index.parquet": "8c4827151a1556c769943f9b89966ffb"
+  },
+  "stats": {
+    "nih_images": 112120,
+    "nih_folders": 12,
+    "nih_gb": 45.06,
+    "checked": 300,
+    "pneumonia_images": 5856
+  },
+  "status": "ok",
+  "duration_s": 3.3
+}

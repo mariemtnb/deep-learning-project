@@ -1,0 +1,22 @@
+{
+  "stage": "report",
+  "started_at": "2026-11-09T10:02:47",
+  "git_commit": "unknown",
+  "config": "configs/params.yaml",
+  "inputs": {
+    "data/processed/dataset.parquet": "d58e942c28f13a44325bc81d4c53f046",
+    "data/processed/pneumonia_index.parquet": "8c4827151a1556c769943f9b89966ffb",
+    "reports/validation_raw.json": "1314c55924ae8d48b6547407ff1fa492",
+    "reports/validation_processed.json": "45a6cc3fa9fc0d5ee8356593201540cf"
+  },
+  "outputs": {
+    "outputs/summary.json": "2362bf5cd0364d65ec95c69ada5073aa",
+    "reports/quality_report.html": "c4a3d45c38b4a66fe6042a70dca5f8cf"
+  },
+  "stats": {
+    "images": 112120,
+    "patients": 30805
+  },
+  "status": "ok",
+  "duration_s": 0.29
+}

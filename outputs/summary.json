@@ -1,0 +1,198 @@
+{
+  "generated_at": "2026-11-09T10:02:47",
+  "n_images": 112120,
+  "n_patients": 30805,
+  "n_images_on_disk": 112120,
+  "age": {
+    "n_invalid_repaired": 16,
+    "mean_clean": 46.9,
+    "median_clean": 49
+  },
+  "gender_counts": {
+    "M": 63340,
+    "F": 48780
+  },
+  "view_counts": {
+    "PA": 67310,
+    "AP": 44810
+  },
+  "split_counts": {
+    "train": 77724,
+    "test": 25596,
+    "val": 8800
+  },
+  "split_patients": {
+    "test": 2797,
+    "train": 25208,
+    "val": 2800
+  },
+  "normal_vs_abnormal": {
+    "normal": 60361,
+    "abnormal": 51759
+  },
+  "multilabel_counts": {
+    "0": 60361,
+    "1": 30963,
+    "2": 14306,
+    "3": 4856,
+    "4": 1247,
+    "5": 301,
+    "6": 67,
+    "7": 16,
+    "8": 1,
+    "9": 2
+  },
+  "pathology_counts": {
+    "Atelectasis": 11559,
+    "Cardiomegaly": 2776,
+    "Effusion": 13317,
+    "Infiltration": 19894,
+    "Mass": 5782,
+    "Nodule": 6331,
+    "Pneumonia": 1431,
+    "Pneumothorax": 5302,
+    "Consolidation": 4667,
+    "Edema": 2303,
+    "Emphysema": 2516,
+    "Fibrosis": 1686,
+    "Pleural_Thickening": 3385,
+    "Hernia": 227
+  },
+  "age_group_counts": {
+    "46-60": 39360,
+    "31-45": 26860,
+    "61-75": 21913,
+    "19-30": 15312,
+    "0-18": 5941,
+    "76+": 2734
+  },
+  "pathology_by_gender": {
+    "Atelectasis": {
+      "F": 4653,
+      "M": 6906
+    },
+    "Cardiomegaly": {
+      "F": 1469,
+      "M": 1307
+    },
+    "Effusion": {
+      "F": 5882,
+      "M": 7435
+    },
+    "Infiltration": {
+      "F": 8467,
+      "M": 11427
+    },
+    "Mass": {
+      "F": 2253,
+      "M": 3529
+    },
+    "Nodule": {
+      "F": 2646,
+      "M": 3685
+    },
+    "Pneumonia": {
+      "F": 593,
+      "M": 838
+    },
+    "Pneumothorax": {
+      "F": 2585,
+      "M": 2717
+    },
+    "Consolidation": {
+      "F": 2001,
+      "M": 2666
+    },
+    "Edema": {
+      "F": 1099,
+      "M": 1204
+    },
+    "Emphysema": {
+      "F": 906,
+      "M": 1610
+    },
+    "Fibrosis": {
+      "F": 771,
+      "M": 915
+    },
+    "Pleural_Thickening": {
+      "F": 1343,
+      "M": 2042
+    },
+    "Hernia": {
+      "F": 131,
+      "M": 96
+    }
+  },
+  "pathology_by_view": {
+    "Atelectasis": {
+      "AP": 0.1301,
+      "PA": 0.0851
+    },
+    "Cardiomegaly": {
+      "AP": 0.0271,
+      "PA": 0.0232
+    },
+    "Effusion": {
+      "AP": 0.1501,
+      "PA": 0.0979
+    },
+    "Infiltration": {
+      "AP": 0.2352,
+      "PA": 0.139
+    },
+    "Mass": {
+      "AP": 0.0494,
+      "PA": 0.053
+    },
+    "Nodule": {
+      "AP": 0.0481,
+      "PA": 0.0621
+    },
+    "Pneumonia": {
+      "AP": 0.0179,
+      "PA": 0.0094
+    },
+    "Pneumothorax": {
+      "AP": 0.0423,
+      "PA": 0.0506
+    },
+    "Consolidation": {
+      "AP": 0.0702,
+      "PA": 0.0226
+    },
+    "Edema": {
+      "AP": 0.0452,
+      "PA": 0.0041
+    },
+    "Emphysema": {
+      "AP": 0.0227,
+      "PA": 0.0223
+    },
+    "Fibrosis": {
+      "AP": 0.0062,
+      "PA": 0.0209
+    },
+    "Pleural_Thickening": {
+      "AP": 0.0216,
+      "PA": 0.0359
+    },
+    "Hernia": {
+      "AP": 0.0008,
+      "PA": 0.0029
+    }
+  },
+  "images_per_patient": {
+    "mean": 3.64,
+    "max": 184
+  },
+  "has_bbox": 880,
+  "pneumonia_dataset": {
+    "test/NORMAL": 234,
+    "test/PNEUMONIA": 390,
+    "train/NORMAL": 1341,
+    "train/PNEUMONIA": 3875,
+    "val/NORMAL": 8,
+    "val/PNEUMONIA": 8
+  }
+}

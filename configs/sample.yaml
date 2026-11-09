@@ -1,0 +1,25 @@
+# Configuration « échantillon » utilisée par la CI et pour les tests rapides.
+# Elle reprend params.yaml et ne remplace que ce qui change.
+extends: params.yaml
+
+paths:
+  raw_nih: data/sample/nih
+  nih_images: data/sample/nih_images
+  pneumonia_images: data/sample/pneumonia
+  interim: build/sample/interim
+  processed: build/sample/processed
+  reports: build/sample/reports
+  outputs: build/sample/outputs
+  logs: build/sample/logs
+
+images:
+  check_sample: 1000          # tout l'échantillon est contrôlé
+  expected_size: [128, 128]   # vignettes réduites pour tenir dans Git
+
+quality:
+  # L'échantillon (≈ 150 images) ne contient pas toutes les pathologies.
+  min_label_prevalence: 0.0
+  max_val_test_prevalence_gap: 1.0
+
+drift:
+  reference: build/sample/reports/reference_profile.json

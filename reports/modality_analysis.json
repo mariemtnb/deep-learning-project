@@ -1,0 +1,133 @@
+{
+  "tabular_only_auc_val": {
+    "Atelectasis": 0.629,
+    "Cardiomegaly": 0.575,
+    "Effusion": 0.678,
+    "Infiltration": 0.608,
+    "Mass": 0.534,
+    "Nodule": 0.609,
+    "Pneumonia": 0.66,
+    "Pneumothorax": 0.623,
+    "Consolidation": 0.705,
+    "Edema": 0.794,
+    "Emphysema": 0.638,
+    "Fibrosis": 0.719,
+    "Pleural_Thickening": 0.613,
+    "Hernia": 0.859
+  },
+  "tabular_only_mean_auc": 0.66,
+  "prevalence_by_view": {
+    "Atelectasis": {
+      "AP": 0.1301,
+      "PA": 0.0851
+    },
+    "Cardiomegaly": {
+      "AP": 0.0271,
+      "PA": 0.0232
+    },
+    "Effusion": {
+      "AP": 0.1501,
+      "PA": 0.0979
+    },
+    "Infiltration": {
+      "AP": 0.2352,
+      "PA": 0.139
+    },
+    "Mass": {
+      "AP": 0.0494,
+      "PA": 0.053
+    },
+    "Nodule": {
+      "AP": 0.0481,
+      "PA": 0.0621
+    },
+    "Pneumonia": {
+      "AP": 0.0179,
+      "PA": 0.0094
+    },
+    "Pneumothorax": {
+      "AP": 0.0423,
+      "PA": 0.0506
+    },
+    "Consolidation": {
+      "AP": 0.0702,
+      "PA": 0.0226
+    },
+    "Edema": {
+      "AP": 0.0452,
+      "PA": 0.0041
+    },
+    "Emphysema": {
+      "AP": 0.0227,
+      "PA": 0.0223
+    },
+    "Fibrosis": {
+      "AP": 0.0062,
+      "PA": 0.0209
+    },
+    "Pleural_Thickening": {
+      "AP": 0.0216,
+      "PA": 0.0359
+    },
+    "Hernia": {
+      "AP": 0.0008,
+      "PA": 0.0029
+    }
+  },
+  "prevalence_ratio_ap_over_pa": {
+    "Atelectasis": 1.53,
+    "Cardiomegaly": 1.17,
+    "Effusion": 1.53,
+    "Infiltration": 1.69,
+    "Mass": 0.93,
+    "Nodule": 0.77,
+    "Pneumonia": 1.9,
+    "Pneumothorax": 0.84,
+    "Consolidation": 3.11,
+    "Edema": 11.02,
+    "Emphysema": 1.02,
+    "Fibrosis": 0.3,
+    "Pleural_Thickening": 0.6,
+    "Hernia": 0.28
+  },
+  "view_share_ap": 0.4,
+  "train_positives": {
+    "Atelectasis": 7346,
+    "Cardiomegaly": 1523,
+    "Effusion": 7680,
+    "Infiltration": 12306,
+    "Mass": 3695,
+    "Nodule": 4199,
+    "Pneumonia": 770,
+    "Pneumothorax": 2370,
+    "Consolidation": 2543,
+    "Edema": 1244,
+    "Emphysema": 1295,
+    "Fibrosis": 1121,
+    "Pleural_Thickening": 2007,
+    "Hernia": 127
+  },
+  "pos_weight": {
+    "Atelectasis": 9.6,
+    "Cardiomegaly": 50.0,
+    "Effusion": 9.1,
+    "Infiltration": 5.3,
+    "Mass": 20.0,
+    "Nodule": 17.5,
+    "Pneumonia": 99.9,
+    "Pneumothorax": 31.8,
+    "Consolidation": 29.6,
+    "Edema": 61.5,
+    "Emphysema": 59.0,
+    "Fibrosis": 68.3,
+    "Pleural_Thickening": 37.7,
+    "Hernia": 611.0
+  },
+  "images_per_patient": {
+    "mean": 3.64,
+    "p95": 14,
+    "max": 184
+  },
+  "missing_tabular_rate": 0.0,
+  "missing_image_rate": 0.0
+}

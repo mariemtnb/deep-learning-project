@@ -1,0 +1,98 @@
+{
+  "n_checks": 11,
+  "n_failed_critical": 0,
+  "n_failed_warning": 0,
+  "checks": [
+    {
+      "name": "schéma table clinique brute",
+      "level": "critical",
+      "passed": true,
+      "value": "ok",
+      "threshold": "schéma respecté",
+      "detail": ""
+    },
+    {
+      "name": "schéma boîtes englobantes",
+      "level": "critical",
+      "passed": true,
+      "value": "ok",
+      "threshold": "schéma respecté",
+      "detail": ""
+    },
+    {
+      "name": "taux de manquants (colonnes clés)",
+      "level": "critical",
+      "passed": true,
+      "value": 0.0,
+      "threshold": 0.0,
+      "detail": ""
+    },
+    {
+      "name": "doublons de nom d'image",
+      "level": "critical",
+      "passed": true,
+      "value": 0,
+      "threshold": 0,
+      "detail": ""
+    },
+    {
+      "name": "âges aberrants (avant réparation)",
+      "level": "critical",
+      "passed": true,
+      "value": 0.000143,
+      "threshold": 0.001,
+      "detail": "16 lignes hors [1, 100]"
+    },
+    {
+      "name": "dimensions des images = 1024x1024",
+      "level": "critical",
+      "passed": true,
+      "value": 0.0,
+      "threshold": 0.01,
+      "detail": "300 images ouvertes"
+    },
+    {
+      "name": "mode des images (niveaux de gris)",
+      "level": "critical",
+      "passed": true,
+      "value": 0,
+      "threshold": 0,
+      "detail": "modes autorisés : ['L', 'RGBA']"
+    },
+    {
+      "name": "couverture tabulaire → image",
+      "level": "critical",
+      "passed": true,
+      "value": 1.0,
+      "threshold": 1.0,
+      "detail": "0 lignes sans image"
+    },
+    {
+      "name": "images sans ligne clinique (orphelines)",
+      "level": "warning",
+      "passed": true,
+      "value": 0,
+      "threshold": 0,
+      "detail": ""
+    },
+    {
+      "name": "boîtes englobantes rattachées à une image connue",
+      "level": "critical",
+      "passed": true,
+      "value": 0,
+      "threshold": 0,
+      "detail": ""
+    },
+    {
+      "name": "listes officielles train_val/test disjointes et complètes",
+      "level": "critical",
+      "passed": true,
+      "value": {
+        "absentes": 0,
+        "dans_les_deux": 0
+      },
+      "threshold": 0,
+      "detail": ""
+    }
+  ]
+}

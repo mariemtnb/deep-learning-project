@@ -1,0 +1,36 @@
+{
+  "rows": {
+    "reference": 112120,
+    "current": 112120
+  },
+  "psi": {
+    "age": 0.0,
+    "gender": 0.0,
+    "view": 0.0,
+    "split": 0.0
+  },
+  "levels": {
+    "age": "stable",
+    "gender": "stable",
+    "view": "stable",
+    "split": "stable"
+  },
+  "prevalence_shift": {
+    "Atelectasis": 0.0,
+    "Cardiomegaly": 0.0,
+    "Effusion": 0.0,
+    "Infiltration": 0.0,
+    "Mass": 0.0,
+    "Nodule": 0.0,
+    "Pneumonia": 0.0,
+    "Pneumothorax": 0.0,
+    "Consolidation": 0.0,
+    "Edema": 0.0,
+    "Emphysema": 0.0,
+    "Fibrosis": 0.0,
+    "Pleural_Thickening": 0.0,
+    "Hernia": 0.0
+  },
+  "max_abs_prevalence_shift": 0.0,
+  "drift_detected": false
+}

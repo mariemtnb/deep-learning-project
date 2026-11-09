@@ -1,0 +1,9 @@
+project deep learning datasets
+app/web/node_modules
+build
+logs
+mlruns
+.git
+.dvc/cache
+data/interim
+data/processed

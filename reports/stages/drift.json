@@ -1,0 +1,21 @@
+{
+  "stage": "drift",
+  "started_at": "2026-11-09T10:02:56",
+  "git_commit": "unknown",
+  "config": "configs/params.yaml",
+  "inputs": {
+    "data/processed/dataset.parquet": "d58e942c28f13a44325bc81d4c53f046"
+  },
+  "outputs": {
+    "reports/drift.json": "f11fd1410793d984766d3a7c47ab5578"
+  },
+  "stats": {
+    "drift_detected": false,
+    "age": 0.0,
+    "gender": 0.0,
+    "view": 0.0,
+    "split": 0.0
+  },
+  "status": "ok",
+  "duration_s": 0.09
+}

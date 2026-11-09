@@ -1,0 +1,19 @@
+{
+  "stage": "validate",
+  "started_at": "2026-11-09T10:02:41",
+  "git_commit": "unknown",
+  "config": "configs/params.yaml",
+  "inputs": {
+    "data/processed/dataset.parquet": "d58e942c28f13a44325bc81d4c53f046"
+  },
+  "outputs": {
+    "reports/validation_processed.json": "45a6cc3fa9fc0d5ee8356593201540cf"
+  },
+  "stats": {
+    "checks": 7,
+    "failed_critical": 0,
+    "failed_warning": 1
+  },
+  "status": "ok",
+  "duration_s": 0.29
+}

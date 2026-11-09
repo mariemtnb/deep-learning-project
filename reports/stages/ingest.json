@@ -1,0 +1,26 @@
+{
+  "stage": "ingest",
+  "started_at": "2026-11-09T10:02:19",
+  "git_commit": "unknown",
+  "config": "configs/params.yaml",
+  "inputs": {
+    "data/raw/nih/Data_Entry_2017.csv": "2528009b0d96b19d4de60debedd8ded6",
+    "data/raw/nih/BBox_List_2017.csv": "c288912caf65ab8b6c7aff6717d11005",
+    "data/raw/nih/test_list.txt": "adeeabf20ea2a8eb66ced87b78434400",
+    "data/raw/nih/train_val_list.txt": "067e3a84206964892e6300e4a4c0a205"
+  },
+  "outputs": {
+    "data/interim/metadata_raw.parquet": "99e8bd95c8b10148a48452f76bec2d6d",
+    "data/interim/bbox.parquet": "83c93676665977b0d578cce5277869dd",
+    "data/interim/official_split.parquet": "5853c13fff7636062f6bb808f11b7271"
+  },
+  "stats": {
+    "metadata_rows": 112120,
+    "patients": 30805,
+    "bbox_rows": 984,
+    "official_test": 25596,
+    "official_trainval": 86524
+  },
+  "status": "ok",
+  "duration_s": 0.28
+}

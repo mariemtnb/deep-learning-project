@@ -1,0 +1,5 @@
+[core]
+    autostage = true
+    remote = shared
+['remote "shared"']
+    url = ../../dvc-storage-deep-learning

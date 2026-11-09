@@ -1,0 +1,94 @@
+# Paramètres du pipeline DataOps (Tâche 3).
+# Tous les chemins sont relatifs à la racine du dépôt. Aucun script ne code de chemin
+# ou de seuil en dur : tout passe par ce fichier (ou par un fichier qui l'étend, cf. sample.yaml).
+
+seed: 42
+
+paths:
+  # Métadonnées NIH (CSV + listes officielles). Versionnées avec DVC (data/raw/nih.dvc).
+  raw_nih: data/raw/nih
+  # Images NIH (45 Go) et jeu pédiatrique Pneumonia (2,3 Go) : hors Git et hors DVC,
+  # téléchargées depuis Kaggle (voir README, section « Récupérer les données »).
+  nih_images: "project deep learning datasets/NIH Chest X-rays"
+  pneumonia_images: "project deep learning datasets/Chest X-Ray Images (Pneumonia)/chest_xray/chest_xray"
+  interim: data/interim
+  processed: data/processed
+  reports: reports
+  outputs: outputs
+  logs: logs
+
+ingest:
+  metadata_file: Data_Entry_2017.csv
+  bbox_file: BBox_List_2017.csv
+  test_list: test_list.txt
+  trainval_list: train_val_list.txt
+
+images:
+  folder_glob: "images_*"
+  extension: .png
+  # Nombre d'images ouvertes (tirées au hasard) pour contrôler dimensions et mode.
+  # Ouvrir les 112 120 fichiers prendrait plusieurs minutes pour une information stable.
+  check_sample: 300
+  expected_size: [1024, 1024]
+  allowed_modes: [L, RGBA]
+  pneumonia_extension: .jpeg
+
+preprocess:
+  age_min: 1
+  age_max: 100
+  age_bins: [0, 18, 30, 45, 60, 75, 120]
+  age_labels: ["0-18", "19-30", "31-45", "46-60", "61-75", "76+"]
+  genders: [M, F]
+  views: [PA, AP]
+  pathologies: [Atelectasis, Cardiomegaly, Effusion, Infiltration, Mass, Nodule,
+                Pneumonia, Pneumothorax, Consolidation, Edema, Emphysema, Fibrosis,
+                Pleural_Thickening, Hernia]
+
+split:
+  # Le test officiel NIH est conservé tel quel ; la validation est tirée du train_val
+  # par patient (aucun patient dans deux ensembles).
+  val_fraction: 0.10
+  group_key: patient_id
+
+quality:
+  # Contrôles critiques : le pipeline s'arrête (code de sortie 1) si l'un échoue.
+  max_missing_rate: 0.0          # colonnes clés : image, patient_id, âge, sexe, vue, labels
+  max_duplicate_images: 0
+  max_invalid_age_rate: 0.001    # 16 âges impossibles sur 112 120 = 0,014 %
+  min_image_coverage: 1.0        # part des lignes tabulaires dont l'image est trouvée
+  max_patients_across_splits: 0
+  max_image_size_mismatch_rate: 0.01
+  bbox_must_join: true
+  # Contrôles d'alerte : signalés dans le rapport sans arrêter le pipeline.
+  min_label_prevalence: 0.001    # Hernia ≈ 0,2 %
+  max_val_test_prevalence_gap: 0.05
+
+analysis:
+  # Étude de l'apport de la modalité tabulaire seule (justification de la fusion, Partie B).
+  tabular_features: [age_clean, gender, view, followup]
+  max_iter: 1000
+
+drift:
+  reference: reports/reference_profile.json
+  psi_warn: 0.10
+  psi_alert: 0.25
+
+examples:
+  thumb_px: 360
+  nih: [["00000002_000.png", "No Finding"], ["00000001_000.png", "Cardiomegaly"],
+        ["00000011_000.png", "Effusion"], ["00000013_011.png", "Pneumothorax"]]
+
+# Réservé aux tâches suivantes (fusion, entraînement, évaluation).
+fusion:
+  image_size: 224
+  image_encoder: densenet121
+  image_dim: 1024
+  tab_dim: 64
+  fused_dim: 256
+  modality_dropout: 0.2
+  aux_weight: 0.3
+
+tracking:
+  backend: mlflow
+  uri: mlruns
+  experiment: chest-xray-fusion

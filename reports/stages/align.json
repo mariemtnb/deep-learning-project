@@ -1,0 +1,23 @@
+{
+  "stage": "align",
+  "started_at": "2026-11-09T10:02:35",
+  "git_commit": "unknown",
+  "config": "configs/params.yaml",
+  "inputs": {
+    "data/interim/metadata_clean.parquet": "283d4b90b5359361b7305c5c8e31f5a3",
+    "data/interim/image_index.parquet": "925bc9b22cfe91e3c6d29436f8136cbc",
+    "data/interim/bbox.parquet": "83c93676665977b0d578cce5277869dd"
+  },
+  "outputs": {
+    "data/interim/aligned.parquet": "70538adaf609636433466c6ef3609b4d"
+  },
+  "stats": {
+    "rows": 112120,
+    "with_image": 112120,
+    "missing_image": 0,
+    "orphan_images": 0,
+    "with_bbox": 880
+  },
+  "status": "ok",
+  "duration_s": 0.37
+}

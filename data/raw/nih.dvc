@@ -1,0 +1,6 @@
+outs:
+- md5: 605fd19995267f2e82d7e442e20d7f60.dir
+  size: 9859606
+  nfiles: 4
+  hash: md5
+  path: nih

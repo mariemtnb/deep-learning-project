@@ -1,0 +1,452 @@
+schema: '2.0'
+stages:
+  ingest:
+    cmd: python -m src.cli ingest
+    deps:
+    - path: data/raw/nih
+      hash: md5
+      md5: 605fd19995267f2e82d7e442e20d7f60.dir
+      size: 9859606
+      nfiles: 4
+    - path: src/ingestion/nih_metadata.py
+      hash: md5
+      md5: 5d604fbdc4108af0e66196e480682e41
+      size: 2990
+    params:
+      configs/params.yaml:
+        ingest:
+          metadata_file: Data_Entry_2017.csv
+          bbox_file: BBox_List_2017.csv
+          test_list: test_list.txt
+          trainval_list: train_val_list.txt
+        paths.raw_nih: data/raw/nih
+    outs:
+    - path: data/interim/bbox.parquet
+      hash: md5
+      md5: 83c93676665977b0d578cce5277869dd
+      size: 37208
+    - path: data/interim/metadata_raw.parquet
+      hash: md5
+      md5: 99e8bd95c8b10148a48452f76bec2d6d
+      size: 1404575
+    - path: data/interim/official_split.parquet
+      hash: md5
+      md5: 5853c13fff7636062f6bb808f11b7271
+      size: 633867
+  index_images:
+    cmd: python -m src.cli index_images
+    deps:
+    - path: src/ingestion/images.py
+      hash: md5
+      md5: 24ac8b001802b6307eebc1c6f446b1bc
+      size: 3520
+    params:
+      configs/params.yaml:
+        images:
+          folder_glob: images_*
+          extension: .png
+          check_sample: 300
+          expected_size:
+          - 1024
+          - 1024
+          allowed_modes:
+          - L
+          - RGBA
+          pneumonia_extension: .jpeg
+        paths.nih_images: project deep learning datasets/NIH Chest X-rays
+        paths.pneumonia_images: project deep learning datasets/Chest X-Ray 
+          Images (Pneumonia)/chest_xray/chest_xray
+        seed: 42
+    outs:
+    - path: data/interim/image_checks.parquet
+      hash: md5
+      md5: 0e59318845840b7a1ed1733c71f8f28e
+      size: 5888
+    - path: data/interim/image_index.parquet
+      hash: md5
+      md5: 925bc9b22cfe91e3c6d29436f8136cbc
+      size: 1206172
+    - path: data/interim/pneumonia_index.parquet
+      hash: md5
+      md5: 8c4827151a1556c769943f9b89966ffb
+      size: 91248
+  validate_raw:
+    cmd: python -m src.cli validate_raw
+    deps:
+    - path: data/interim/bbox.parquet
+      hash: md5
+      md5: 83c93676665977b0d578cce5277869dd
+      size: 37208
+    - path: data/interim/image_checks.parquet
+      hash: md5
+      md5: 0e59318845840b7a1ed1733c71f8f28e
+      size: 5888
+    - path: data/interim/image_index.parquet
+      hash: md5
+      md5: 925bc9b22cfe91e3c6d29436f8136cbc
+      size: 1206172
+    - path: data/interim/metadata_raw.parquet
+      hash: md5
+      md5: 99e8bd95c8b10148a48452f76bec2d6d
+      size: 1404575
+    - path: data/interim/official_split.parquet
+      hash: md5
+      md5: 5853c13fff7636062f6bb808f11b7271
+      size: 633867
+    - path: src/validation
+      hash: md5
+      md5: c608dc19fe890fa4cd396acebf31f0ce.dir
+      size: 12295
+      nfiles: 3
+    params:
+      configs/params.yaml:
+        images.allowed_modes:
+        - L
+        - RGBA
+        images.expected_size:
+        - 1024
+        - 1024
+        preprocess.age_max: 100
+        preprocess.age_min: 1
+        quality:
+          max_missing_rate: 0.0
+          max_duplicate_images: 0
+          max_invalid_age_rate: 0.001
+          min_image_coverage: 1.0
+          max_patients_across_splits: 0
+          max_image_size_mismatch_rate: 0.01
+          bbox_must_join: true
+          min_label_prevalence: 0.001
+          max_val_test_prevalence_gap: 0.05
+    outs:
+    - path: reports/validation_raw.json
+      hash: md5
+      md5: 1314c55924ae8d48b6547407ff1fa492
+      size: 2322
+  preprocess:
+    cmd: python -m src.cli preprocess
+    deps:
+    - path: data/interim/metadata_raw.parquet
+      hash: md5
+      md5: 99e8bd95c8b10148a48452f76bec2d6d
+      size: 1404575
+    - path: reports/validation_raw.json
+      hash: md5
+      md5: 1314c55924ae8d48b6547407ff1fa492
+      size: 2322
+    - path: src/preprocessing/clean.py
+      hash: md5
+      md5: a6b16f78b23181bbeb5fa656d266e40d
+      size: 2611
+    params:
+      configs/params.yaml:
+        preprocess:
+          age_min: 1
+          age_max: 100
+          age_bins:
+          - 0
+          - 18
+          - 30
+          - 45
+          - 60
+          - 75
+          - 120
+          age_labels:
+          - 0-18
+          - 19-30
+          - 31-45
+          - 46-60
+          - 61-75
+          - 76+
+          genders:
+          - M
+          - F
+          views:
+          - PA
+          - AP
+          pathologies:
+          - Atelectasis
+          - Cardiomegaly
+          - Effusion
+          - Infiltration
+          - Mass
+          - Nodule
+          - Pneumonia
+          - Pneumothorax
+          - Consolidation
+          - Edema
+          - Emphysema
+          - Fibrosis
+          - Pleural_Thickening
+          - Hernia
+    outs:
+    - path: data/interim/metadata_clean.parquet
+      hash: md5
+      md5: 283d4b90b5359361b7305c5c8e31f5a3
+      size: 1825293
+  align:
+    cmd: python -m src.cli align
+    deps:
+    - path: data/interim/bbox.parquet
+      hash: md5
+      md5: 83c93676665977b0d578cce5277869dd
+      size: 37208
+    - path: data/interim/image_index.parquet
+      hash: md5
+      md5: 925bc9b22cfe91e3c6d29436f8136cbc
+      size: 1206172
+    - path: data/interim/metadata_clean.parquet
+      hash: md5
+      md5: 283d4b90b5359361b7305c5c8e31f5a3
+      size: 1825293
+    - path: src/alignment/align.py
+      hash: md5
+      md5: 069fe07f4fedbb460e9725f86500a948
+      size: 2004
+    outs:
+    - path: data/interim/aligned.parquet
+      hash: md5
+      md5: 70538adaf609636433466c6ef3609b4d
+      size: 1833179
+  split:
+    cmd: python -m src.cli split
+    deps:
+    - path: data/interim/aligned.parquet
+      hash: md5
+      md5: 70538adaf609636433466c6ef3609b4d
+      size: 1833179
+    - path: data/interim/official_split.parquet
+      hash: md5
+      md5: 5853c13fff7636062f6bb808f11b7271
+      size: 633867
+    - path: data/interim/pneumonia_index.parquet
+      hash: md5
+      md5: 8c4827151a1556c769943f9b89966ffb
+      size: 91248
+    - path: src/splitting/split.py
+      hash: md5
+      md5: c9c9f19b40c363e20d32b0a031949bf9
+      size: 2781
+    params:
+      configs/params.yaml:
+        seed: 42
+        split:
+          val_fraction: 0.1
+          group_key: patient_id
+    outs:
+    - path: data/processed/dataset.parquet
+      hash: md5
+      md5: d58e942c28f13a44325bc81d4c53f046
+      size: 1692294
+    - path: data/processed/pneumonia_index.parquet
+      hash: md5
+      md5: 8c4827151a1556c769943f9b89966ffb
+      size: 91248
+  validate:
+    cmd: python -m src.cli validate
+    deps:
+    - path: data/processed/dataset.parquet
+      hash: md5
+      md5: d58e942c28f13a44325bc81d4c53f046
+      size: 1692294
+    - path: src/validation
+      hash: md5
+      md5: c608dc19fe890fa4cd396acebf31f0ce.dir
+      size: 12295
+      nfiles: 3
+    params:
+      configs/params.yaml:
+        preprocess:
+          age_min: 1
+          age_max: 100
+          age_bins:
+          - 0
+          - 18
+          - 30
+          - 45
+          - 60
+          - 75
+          - 120
+          age_labels:
+          - 0-18
+          - 19-30
+          - 31-45
+          - 46-60
+          - 61-75
+          - 76+
+          genders:
+          - M
+          - F
+          views:
+          - PA
+          - AP
+          pathologies:
+          - Atelectasis
+          - Cardiomegaly
+          - Effusion
+          - Infiltration
+          - Mass
+          - Nodule
+          - Pneumonia
+          - Pneumothorax
+          - Consolidation
+          - Edema
+          - Emphysema
+          - Fibrosis
+          - Pleural_Thickening
+          - Hernia
+        quality:
+          max_missing_rate: 0.0
+          max_duplicate_images: 0
+          max_invalid_age_rate: 0.001
+          min_image_coverage: 1.0
+          max_patients_across_splits: 0
+          max_image_size_mismatch_rate: 0.01
+          bbox_must_join: true
+          min_label_prevalence: 0.001
+          max_val_test_prevalence_gap: 0.05
+    outs:
+    - path: reports/validation_processed.json
+      hash: md5
+      md5: 45a6cc3fa9fc0d5ee8356593201540cf
+      size: 1515
+  analyze:
+    cmd: python -m src.cli analyze
+    deps:
+    - path: data/processed/dataset.parquet
+      hash: md5
+      md5: d58e942c28f13a44325bc81d4c53f046
+      size: 1692294
+    - path: reports/validation_processed.json
+      hash: md5
+      md5: 45a6cc3fa9fc0d5ee8356593201540cf
+      size: 1515
+    - path: src/analysis/modalities.py
+      hash: md5
+      md5: 6721a94046e72484d59765caf3c3f57a
+      size: 3963
+    params:
+      configs/params.yaml:
+        analysis:
+          tabular_features:
+          - age_clean
+          - gender
+          - view
+          - followup
+          max_iter: 1000
+    outs:
+    - path: reports/modality_analysis.json
+      hash: md5
+      md5: 452940cc20345fe668af607580f8b481
+      size: 2719
+  report:
+    cmd: python -m src.cli report
+    deps:
+    - path: data/processed/dataset.parquet
+      hash: md5
+      md5: d58e942c28f13a44325bc81d4c53f046
+      size: 1692294
+    - path: data/processed/pneumonia_index.parquet
+      hash: md5
+      md5: 8c4827151a1556c769943f9b89966ffb
+      size: 91248
+    - path: reports/validation_processed.json
+      hash: md5
+      md5: 45a6cc3fa9fc0d5ee8356593201540cf
+      size: 1515
+    - path: reports/validation_raw.json
+      hash: md5
+      md5: 1314c55924ae8d48b6547407ff1fa492
+      size: 2322
+    - path: src/reporting/summary.py
+      hash: md5
+      md5: d42538809abecce117edbe6d5e18cd53
+      size: 6689
+    outs:
+    - path: outputs/summary.json
+      hash: md5
+      md5: 2362bf5cd0364d65ec95c69ada5073aa
+      size: 3494
+    - path: reports/quality_report.html
+      hash: md5
+      md5: c4a3d45c38b4a66fe6042a70dca5f8cf
+      size: 5948
+  examples:
+    cmd: python -m src.cli examples
+    deps:
+    - path: data/interim/bbox.parquet
+      hash: md5
+      md5: 83c93676665977b0d578cce5277869dd
+      size: 37208
+    - path: data/processed/dataset.parquet
+      hash: md5
+      md5: d58e942c28f13a44325bc81d4c53f046
+      size: 1692294
+    - path: src/reporting/examples.py
+      hash: md5
+      md5: bc578aeabcb44b78dcbace57b46b2ef1
+      size: 4218
+    params:
+      configs/params.yaml:
+        examples:
+          thumb_px: 360
+          nih:
+          - - 00000002_000.png
+            - No Finding
+          - - 00000001_000.png
+            - Cardiomegaly
+          - - 00000011_000.png
+            - Effusion
+          - - 00000013_011.png
+            - Pneumothorax
+    outs:
+    - path: outputs/examples.json
+      hash: md5
+      md5: 24a25f29ca17e91f05160f2c0bb0a3c4
+      size: 138047
+  dashboard:
+    cmd: python -m src.cli dashboard
+    deps:
+    - path: outputs/examples.json
+      hash: md5
+      md5: 24a25f29ca17e91f05160f2c0bb0a3c4
+      size: 138047
+    - path: outputs/summary.json
+      hash: md5
+      md5: 2362bf5cd0364d65ec95c69ada5073aa
+      size: 3494
+    - path: src/reporting/dashboard.py
+      hash: md5
+      md5: 6c9c396e675d2f006b1073c7aa5a75ab
+      size: 26932
+    outs:
+    - path: outputs/dashboard.html
+      hash: md5
+      md5: 00b395c31d78acbf0c5cdb232dd07814
+      size: 172472
+  drift:
+    cmd: python -m src.cli drift
+    deps:
+    - path: data/processed/dataset.parquet
+      hash: md5
+      md5: d58e942c28f13a44325bc81d4c53f046
+      size: 1692294
+    - path: reports/reference_profile.json
+      hash: md5
+      md5: eefa39e8b32f4d677a6dbf7916330371
+      size: 817
+    - path: src/monitoring/drift.py
+      hash: md5
+      md5: 8e1db584150529956477b6e174e49883
+      size: 3588
+    params:
+      configs/params.yaml:
+        drift:
+          reference: reports/reference_profile.json
+          psi_warn: 0.1
+          psi_alert: 0.25
+    outs:
+    - path: reports/drift.json
+      hash: md5
+      md5: f11fd1410793d984766d3a7c47ab5578
+      size: 699

@@ -1,0 +1,24 @@
+{
+  "stage": "split",
+  "started_at": "2026-11-09T10:02:38",
+  "git_commit": "unknown",
+  "config": "configs/params.yaml",
+  "inputs": {
+    "data/interim/aligned.parquet": "70538adaf609636433466c6ef3609b4d",
+    "data/interim/official_split.parquet": "5853c13fff7636062f6bb808f11b7271",
+    "data/interim/pneumonia_index.parquet": "8c4827151a1556c769943f9b89966ffb"
+  },
+  "outputs": {
+    "data/processed/dataset.parquet": "d58e942c28f13a44325bc81d4c53f046",
+    "data/processed/pneumonia_index.parquet": "8c4827151a1556c769943f9b89966ffb"
+  },
+  "stats": {
+    "rows": 112120,
+    "split_train": 77724,
+    "split_test": 25596,
+    "split_val": 8800,
+    "val_patients": 2800
+  },
+  "status": "ok",
+  "duration_s": 0.51
+}

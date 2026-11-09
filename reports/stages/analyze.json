@@ -1,0 +1,18 @@
+{
+  "stage": "analyze",
+  "started_at": "2026-11-09T10:02:44",
+  "git_commit": "unknown",
+  "config": "configs/params.yaml",
+  "inputs": {
+    "data/processed/dataset.parquet": "d58e942c28f13a44325bc81d4c53f046"
+  },
+  "outputs": {
+    "reports/modality_analysis.json": "452940cc20345fe668af607580f8b481"
+  },
+  "stats": {
+    "tabular_only_mean_auc": 0.66,
+    "view_share_ap": 0.4
+  },
+  "status": "ok",
+  "duration_s": 0.52
+}

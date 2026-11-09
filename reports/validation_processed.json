@@ -1,0 +1,66 @@
+{
+  "n_checks": 7,
+  "n_failed_critical": 0,
+  "n_failed_warning": 1,
+  "checks": [
+    {
+      "name": "schéma table préparée",
+      "level": "critical",
+      "passed": true,
+      "value": "ok",
+      "threshold": "schéma respecté",
+      "detail": ""
+    },
+    {
+      "name": "fuite de patients entre train/val/test",
+      "level": "critical",
+      "passed": true,
+      "value": 0,
+      "threshold": 0,
+      "detail": ""
+    },
+    {
+      "name": "masque has_image cohérent avec le dossier image",
+      "level": "critical",
+      "passed": true,
+      "value": true,
+      "threshold": true,
+      "detail": ""
+    },
+    {
+      "name": "échantillons avec les deux modalités",
+      "level": "critical",
+      "passed": true,
+      "value": 1.0,
+      "threshold": 1.0,
+      "detail": ""
+    },
+    {
+      "name": "cohérence des labels (n_findings, No Finding exclusif)",
+      "level": "critical",
+      "passed": true,
+      "value": {
+        "n_findings_ok": true,
+        "normal_avec_label": 0
+      },
+      "threshold": 0,
+      "detail": ""
+    },
+    {
+      "name": "prévalence minimale par pathologie",
+      "level": "warning",
+      "passed": true,
+      "value": {},
+      "threshold": 0.001,
+      "detail": ""
+    },
+    {
+      "name": "écart de prévalence val / test (max)",
+      "level": "warning",
+      "passed": false,
+      "value": 0.0738,
+      "threshold": 0.05,
+      "detail": ""
+    }
+  ]
+}

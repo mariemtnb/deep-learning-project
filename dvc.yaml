@@ -1,0 +1,185 @@
+# Pipeline DataOps : `dvc repro` reconstruit tout depuis les sources et ne relance
+# que les étapes dont le code, les paramètres ou les entrées ont changé.
+# Visualiser le graphe : `dvc dag`.
+#
+# Les dossiers d'images (45 Go) ne sont pas déclarés en dépendance : DVC devrait les
+# hacher à chaque `dvc status`. Ils sont immuables ; leur intégrité est contrôlée par
+# l'étape validate_raw (nombre de fichiers, dimensions, appariement avec le CSV).
+
+stages:
+  ingest:
+    cmd: python -m src.cli ingest
+    deps:
+      - src/ingestion/nih_metadata.py
+      - data/raw/nih
+    params:
+      - configs/params.yaml:
+          - ingest
+          - paths.raw_nih
+    outs:
+      - data/interim/metadata_raw.parquet
+      - data/interim/bbox.parquet
+      - data/interim/official_split.parquet
+
+  index_images:
+    cmd: python -m src.cli index_images
+    deps:
+      - src/ingestion/images.py
+    params:
+      - configs/params.yaml:
+          - images
+          - paths.nih_images
+          - paths.pneumonia_images
+          - seed
+    outs:
+      - data/interim/image_index.parquet
+      - data/interim/image_checks.parquet
+      - data/interim/pneumonia_index.parquet
+
+  validate_raw:
+    cmd: python -m src.cli validate_raw
+    deps:
+      - src/validation
+      - data/interim/metadata_raw.parquet
+      - data/interim/bbox.parquet
+      - data/interim/official_split.parquet
+      - data/interim/image_index.parquet
+      - data/interim/image_checks.parquet
+    params:
+      - configs/params.yaml:
+          - quality
+          - preprocess.age_min
+          - preprocess.age_max
+          - images.expected_size
+          - images.allowed_modes
+    outs:
+      - reports/validation_raw.json:
+          cache: false
+
+  preprocess:
+    cmd: python -m src.cli preprocess
+    deps:
+      - src/preprocessing/clean.py
+      - data/interim/metadata_raw.parquet
+      - reports/validation_raw.json
+    params:
+      - configs/params.yaml:
+          - preprocess
+    outs:
+      - data/interim/metadata_clean.parquet
+
+  align:
+    cmd: python -m src.cli align
+    deps:
+      - src/alignment/align.py
+      - data/interim/metadata_clean.parquet
+      - data/interim/image_index.parquet
+      - data/interim/bbox.parquet
+    outs:
+      - data/interim/aligned.parquet
+
+  split:
+    cmd: python -m src.cli split
+    deps:
+      - src/splitting/split.py
+      - data/interim/aligned.parquet
+      - data/interim/official_split.parquet
+      - data/interim/pneumonia_index.parquet
+    params:
+      - configs/params.yaml:
+          - split
+          - seed
+    outs:
+      - data/processed/dataset.parquet
+      - data/processed/pneumonia_index.parquet
+
+  validate:
+    cmd: python -m src.cli validate
+    deps:
+      - src/validation
+      - data/processed/dataset.parquet
+    params:
+      - configs/params.yaml:
+          - quality
+          - preprocess
+    outs:
+      - reports/validation_processed.json:
+          cache: false
+
+  analyze:
+    cmd: python -m src.cli analyze
+    deps:
+      - src/analysis/modalities.py
+      - data/processed/dataset.parquet
+      - reports/validation_processed.json
+    params:
+      - configs/params.yaml:
+          - analysis
+    metrics:
+      - reports/modality_analysis.json:
+          cache: false
+
+  report:
+    cmd: python -m src.cli report
+    deps:
+      - src/reporting/summary.py
+      - data/processed/dataset.parquet
+      - data/processed/pneumonia_index.parquet
+      - reports/validation_raw.json
+      - reports/validation_processed.json
+    outs:
+      - outputs/summary.json:
+          cache: false
+      - reports/quality_report.html:
+          cache: false
+
+  examples:
+    cmd: python -m src.cli examples
+    deps:
+      - src/reporting/examples.py
+      - data/processed/dataset.parquet
+      - data/interim/bbox.parquet
+    params:
+      - configs/params.yaml:
+          - examples
+    outs:
+      - outputs/examples.json:
+          cache: false
+
+  dashboard:
+    cmd: python -m src.cli dashboard
+    deps:
+      - src/reporting/dashboard.py
+      - outputs/summary.json
+      - outputs/examples.json
+    outs:
+      - outputs/dashboard.html:
+          cache: false
+
+  drift:
+    cmd: python -m src.cli drift
+    deps:
+      - src/monitoring/drift.py
+      - data/processed/dataset.parquet
+      - reports/reference_profile.json
+    params:
+      - configs/params.yaml:
+          - drift
+    metrics:
+      - reports/drift.json:
+          cache: false
+
+  # --- Étapes prévues pour les tâches suivantes (gardées ici pour figer leur place) ---
+  # extract_features:     # encodeur image figé -> cache des cartes DenseNet (Tâche 4)
+  #   cmd: python -m src.cli extract_features
+  #   deps: [src/fusion, data/processed/dataset.parquet]
+  #   outs: [data/features/densenet121.npy]
+  # train:                # ChestXrayFusionNet + baselines, suivi MLflow
+  #   cmd: python -m src.training.train
+  #   deps: [src/fusion, src/training, data/processed/dataset.parquet]
+  #   params: [configs/params.yaml: [fusion, tracking]]
+  #   outs: [models/fusion.pt]
+  # evaluate:             # AUC par pathologie, ablations, sous-groupes
+  #   cmd: python -m src.cli evaluate
+  #   deps: [models/fusion.pt, data/processed/dataset.parquet]
+  #   metrics: [reports/eval.json: {cache: false}]

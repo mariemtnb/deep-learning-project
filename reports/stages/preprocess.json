@@ -1,0 +1,20 @@
+{
+  "stage": "preprocess",
+  "started_at": "2026-11-09T10:02:31",
+  "git_commit": "unknown",
+  "config": "configs/params.yaml",
+  "inputs": {
+    "data/interim/metadata_raw.parquet": "99e8bd95c8b10148a48452f76bec2d6d"
+  },
+  "outputs": {
+    "data/interim/metadata_clean.parquet": "283d4b90b5359361b7305c5c8e31f5a3"
+  },
+  "stats": {
+    "rows": 112120,
+    "ages_repaired": 16,
+    "normal": 60361,
+    "multilabel": 20796
+  },
+  "status": "ok",
+  "duration_s": 0.64
+}

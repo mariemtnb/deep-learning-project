@@ -1,0 +1,23 @@
+[project]
+name = "chest-xray-multimodal"
+version = "0.3.0"
+description = "Pipeline DataOps et étude de fusion image + données cliniques (NIH ChestX-ray14)"
+requires-python = ">=3.10"
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+extend-exclude = ["app/web", "notebooks", "scripts/legacy_pipeline_task2.py", "report"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP"]
+ignore = ["E501"]
+
+[tool.ruff.lint.per-file-ignores]
+"src/reporting/dashboard.py" = ["E702", "B023", "B007", "UP"]
+"src/reporting/explanation.py" = ["UP"]
+"app/*" = ["UP", "B"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"

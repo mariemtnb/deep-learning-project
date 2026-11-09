@@ -1,0 +1,652 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Tâche 3 – Pipeline DataOps et fusion multimodale</title>
+<style>
+@page { size: A4; margin: 18mm 18mm 18mm 18mm;
+  @bottom-center { content: counter(page) " / " counter(pages); font: 9pt "Segoe UI", sans-serif; color: #777; } }
+@page :first { @bottom-center { content: none; } }
+* { box-sizing: border-box; }
+body { font: 10.1pt/1.45 "Cambria", "Georgia", serif; color: #1c1c1c; margin: 0; }
+h1, h2, h3, .cover, th, .fig-cap, .tag, pre, code { font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif; }
+h1 { font-size: 15pt; margin: 16pt 0 7pt; color: #12324a; break-after: avoid; padding-top: 2pt; }
+h1.first { break-before: auto; }
+h2 { font-size: 12pt; margin: 14pt 0 5pt; color: #12324a; break-after: avoid; }
+h3 { font-size: 10.6pt; margin: 10pt 0 3pt; break-after: avoid; }
+p { margin: 0 0 6.5pt; text-align: justify; hyphens: auto; }
+ul, ol { margin: 0 0 7pt; padding-left: 18pt; } li { margin-bottom: 2pt; }
+table { border-collapse: collapse; width: 100%; margin: 6pt 0 10pt; font-size: 8.9pt; line-height: 1.35; break-inside: auto; }
+tr { break-inside: avoid; }
+th { background: #eaf0f5; text-align: left; font-weight: 600; font-size: 8.6pt; }
+th, td { border: 0.6pt solid #c9d3dc; padding: 3.5pt 5pt; vertical-align: top; }
+td.n, th.n { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+code { font-size: 8.8pt; background: #f2f4f6; padding: 0 2pt; border-radius: 2pt; }
+pre { font-size: 8.4pt; line-height: 1.38; background: #f6f7f9; border: 0.6pt solid #dde2e7; padding: 7pt 9pt; white-space: pre-wrap; break-inside: avoid; margin: 4pt 0 9pt; }
+.fig { margin: 8pt 0 10pt; break-inside: avoid; text-align: center; }
+.fig-cap { font-size: 8.6pt; color: #555; margin-top: 3pt; }
+.eq { font-family: "Cambria Math", "Cambria", serif; font-size: 10.6pt; margin: 5pt 0 7pt 18pt; line-height: 1.7; }
+.box { border-left: 3pt solid #2f6f95; background: #f3f7fa; padding: 6pt 9pt; margin: 6pt 0 9pt; break-inside: avoid; }
+.small { font-size: 9pt; color: #444; }
+.cover { height: 247mm; display: flex; flex-direction: column; justify-content: space-between; }
+.cover .top { font-size: 10pt; color: #555; letter-spacing: .3pt; }
+.cover h0 { display: block; font-size: 25pt; line-height: 1.2; color: #12324a; font-weight: 600; margin: 70mm 0 6mm; }
+.cover .sub { font-size: 13pt; color: #2f6f95; margin-bottom: 18mm; }
+.cover table { width: auto; font-size: 10pt; } .cover td { border: 0; padding: 2pt 14pt 2pt 0; }
+.toc { font-family: "Segoe UI", Arial, sans-serif; font-size: 10pt; columns: 1; }
+.toc div { margin: 1.5pt 0; } .toc .l2 { padding-left: 16pt; color: #444; font-size: 9.4pt; }
+ol.ref { font-size: 9pt; padding-left: 20pt; } ol.ref li { margin-bottom: 3pt; text-align: left; }
+.ok { color: #1e7a46; font-weight: 600; } .warn { color: #8a5a00; font-weight: 600; }
+</style>
+</head>
+<body>
+
+<section class="cover">
+  <div class="top">Module Deep Learning · Projet en binôme · A.U. 2026-2027</div>
+  <div>
+    <h0>Diagnostic assisté sur radiographie thoracique</h0>
+    <div class="sub">Tâche 3 : automatisation DataOps du pipeline<br>et étude de la fusion image + données cliniques</div>
+    <table>
+      <tr><td><b>Binôme</b></td><td>{{AUTEURS}}</td></tr>
+      <tr><td><b>Encadrante</b></td><td>Aroua Hedhili</td></tr>
+      <tr><td><b>Dépôt</b></td><td>{{DEPOT}} (tag <code>task3</code>)</td></tr>
+      <tr><td><b>Date</b></td><td>{{DATE}}</td></tr>
+    </table>
+  </div>
+  <div class="toc">
+    <div><b>Sommaire</b></div>
+    <div>1. Rappel du projet et des données</div>
+    <div>2. Architecture DataOps</div>
+    <div class="l2">dépôt, étapes, configuration, versionnement, tests, reproductibilité, traçabilité, CI, outils</div>
+    <div>3. État de l'art de la fusion multimodale</div>
+    <div>4. Choix argumenté de l'approche</div>
+    <div>5. Architecture et algorithmes proposés</div>
+    <div>6. Plan d'intégration et prochaines étapes</div>
+    <div>Références</div>
+  </div>
+</section>
+
+<!-- ===================================================================== -->
+<h1 class="first" style="break-before: page">1. Rappel du projet et des données</h1>
+
+<p>Notre projet vise à repérer des pathologies thoraciques sur une radiographie de face, en s'aidant
+des quelques informations cliniques qui l'accompagnent. La tâche est multi-label : une même image peut
+porter plusieurs des 14 pathologies de NIH ChestX-ray14 (épanchement, atélectasie, cardiomégalie, etc.)
+ou aucune (« No Finding »).</p>
+
+<p>En Tâche 1 nous avions retenu deux sources Kaggle. <b>NIH ChestX-ray14</b> [11] est le jeu principal :
+112&nbsp;120 radiographies de 30&nbsp;805 patients, chacune liée à une ligne d'un fichier CSV qui donne
+l'âge, le sexe, la vue (PA, debout de dos, ou AP, de face, souvent au lit) et le numéro de suivi du
+patient. Les deux modalités sont donc une image 1024×1024 en niveaux de gris et un petit vecteur tabulaire
+de quatre variables. Le jeu <b>Chest X-Ray Pneumonia</b> [12] (5&nbsp;856 images pédiatriques, deux classes)
+sert de prototype binaire ; il n'a pas de données cliniques et n'entre donc pas dans la fusion.</p>
+
+<p>En Tâche 2 nous avions écrit un script unique (<code>pipeline.py</code>) qui nettoyait le CSV, encodait
+les labels, découpait par patient et produisait un tableau de bord. Il fonctionnait, mais tout y était codé
+en dur (chemins, seuils, graine), rien n'était testé, et il fallait tout relancer pour la moindre
+modification. La Tâche 3 reprend ce travail sur deux plans :</p>
+<ul>
+  <li><b>Partie A</b> : transformer ce script en un pipeline découpé en étapes, configuré par un fichier
+  YAML, versionné avec DVC, contrôlé par des tests de qualité et exécuté par une CI à chaque push ;</li>
+  <li><b>Partie B</b> : étudier les méthodes de fusion multimodale et choisir celle qui convient à nos
+  données, à partir de mesures faites sur ces données et pas seulement de la littérature.</li>
+</ul>
+
+<p>Quelques chiffres issus de l'exécution complète du pipeline reviendront souvent dans la suite :</p>
+<table>
+  <tr><th>Mesure</th><th class="n">Valeur</th><th>Pourquoi elle compte</th></tr>
+  <tr><td>Images / patients</td><td class="n">112 120 / 30 805</td><td>3,64 images par patient en moyenne, jusqu'à 184 : le découpage doit se faire par patient.</td></tr>
+  <tr><td>Images retrouvées sur disque</td><td class="n">112 120 (100 %)</td><td>Pas de modalité image manquante.</td></tr>
+  <tr><td>Données cliniques manquantes</td><td class="n">0 %</td><td>Seuls 16 âges impossibles (148, 411…), réparés.</td></tr>
+  <tr><td>Images « No Finding »</td><td class="n">53,8 %</td><td>Classes rares : Hernia 227 images (0,2 %).</td></tr>
+  <tr><td>Clichés AP</td><td class="n">40,0 %</td><td>Vue fortement liée à la gravité (section 4).</td></tr>
+  <tr><td>Découpage train / val / test</td><td class="n">77 724 / 8 800 / 25 596</td><td>Test officiel NIH conservé, validation tirée par patient.</td></tr>
+</table>
+
+<!-- ===================================================================== -->
+<h1>2. Architecture DataOps</h1>
+
+<h2>2.1 Organisation du dépôt</h2>
+<p>Nous avons suivi l'arborescence suggérée par l'énoncé, en ajoutant deux dossiers qui correspondent à
+des étapes réelles de notre pipeline (<code>splitting/</code> et <code>analysis/</code>) et un dossier
+<code>monitoring/</code> pour la détection de dérive.</p>
+<pre>configs/          params.yaml (données complètes) · sample.yaml (CI, hérite de params.yaml)
+data/raw/nih.dvc  métadonnées NIH, suivies par DVC        data/sample/  échantillon dans Git (0,9 Mo)
+data/interim/     tables intermédiaires (DVC)              data/processed/  table finale (DVC)
+src/ingestion/    nih_metadata.py, images.py              src/validation/  schemas.py, checks.py
+src/preprocessing/ clean.py      src/alignment/ align.py  src/splitting/  split.py
+src/analysis/     modalities.py  src/reporting/ …         src/monitoring/  drift.py
+src/fusion/       model.py, dataset.py (prototype)        src/training/    réservé Tâche 4
+tests/            test_units.py, test_data_quality.py, test_fusion.py
+dvc.yaml · dvc.lock · requirements.txt · requirements-dl.txt · Dockerfile · .github/workflows/ci.yml</pre>
+<p>Chaque étape est une fonction <code>run(cfg)</code> qui lit ses entrées sur disque, écrit ses sorties sur
+disque et ne dépend d'aucun état en mémoire. Un point d'entrée unique, <code>python -m src.cli &lt;etape&gt;</code>,
+permet à DVC d'appeler chaque étape séparément et à la CI de tout enchaîner avec <code>all</code>.</p>
+
+<h2>2.2 Les étapes du pipeline</h2>
+<div class="fig">
+<svg viewBox="0 0 720 255" width="100%" font-family="Segoe UI, Arial, sans-serif" font-size="10.5">
+  <defs><marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#5a6b7b"/></marker></defs>
+  <g fill="#fff" stroke="#9fb3c4">
+    <rect x="6" y="18" width="118" height="44" rx="4" fill="#f4f6f8"/><rect x="6" y="150" width="118" height="44" rx="4" fill="#f4f6f8"/>
+  </g>
+  <text x="65" y="36" text-anchor="middle" font-weight="600">CSV NIH (DVC)</text><text x="65" y="51" text-anchor="middle" fill="#555">data/raw/nih</text>
+  <text x="65" y="168" text-anchor="middle" font-weight="600">Images (Kaggle)</text><text x="65" y="183" text-anchor="middle" fill="#555">45 Go, hors Git/DVC</text>
+  <g stroke="#2f6f95" fill="#eaf2f8">
+    <rect x="150" y="18" width="92" height="44" rx="4"/><rect x="150" y="150" width="92" height="44" rx="4"/>
+    <rect x="390" y="18" width="92" height="44" rx="4"/><rect x="390" y="88" width="92" height="44" rx="4"/>
+    <rect x="510" y="88" width="92" height="44" rx="4"/>
+  </g>
+  <g stroke="#b9531f" fill="#fbeee6">
+    <rect x="268" y="84" width="96" height="52" rx="4"/><rect x="510" y="18" width="92" height="44" rx="4"/>
+  </g>
+  <g stroke="#6b7c8c" fill="#f1f3f5">
+    <rect x="628" y="6" width="86" height="34" rx="4"/><rect x="628" y="48" width="86" height="34" rx="4"/>
+    <rect x="628" y="90" width="86" height="34" rx="4"/><rect x="628" y="132" width="86" height="34" rx="4"/>
+    <rect x="628" y="174" width="86" height="34" rx="4"/>
+  </g>
+  <text x="196" y="44" text-anchor="middle" font-weight="600">ingest</text>
+  <text x="196" y="170" text-anchor="middle" font-weight="600">index_images</text><text x="196" y="184" text-anchor="middle" fill="#555" font-size="9">manifeste, 300 tests</text>
+  <text x="316" y="106" text-anchor="middle" font-weight="600">validate_raw</text><text x="316" y="121" text-anchor="middle" fill="#8a3a10" font-size="9">11 contrôles · arrêt</text>
+  <text x="436" y="38" text-anchor="middle" font-weight="600">preprocess</text><text x="436" y="52" text-anchor="middle" fill="#555" font-size="9">âges, labels</text>
+  <text x="436" y="108" text-anchor="middle" font-weight="600">align</text><text x="436" y="122" text-anchor="middle" fill="#555" font-size="9">image ↔ clinique</text>
+  <text x="556" y="108" text-anchor="middle" font-weight="600">split</text><text x="556" y="122" text-anchor="middle" fill="#555" font-size="9">par patient</text>
+  <text x="556" y="38" text-anchor="middle" font-weight="600">validate</text><text x="556" y="52" text-anchor="middle" fill="#8a3a10" font-size="9">7 contrôles · arrêt</text>
+  <text x="671" y="27" text-anchor="middle">analyze</text><text x="671" y="69" text-anchor="middle">report</text>
+  <text x="671" y="111" text-anchor="middle">examples</text><text x="671" y="153" text-anchor="middle">dashboard</text><text x="671" y="195" text-anchor="middle">drift</text>
+  <g stroke="#5a6b7b" fill="none" marker-end="url(#a)">
+    <path d="M124,40 H148"/><path d="M124,172 H148"/>
+    <path d="M242,40 C258,40 262,96 266,100"/><path d="M242,172 C258,172 262,124 266,120"/>
+    <path d="M364,100 C376,90 378,46 388,42"/><path d="M482,40 C496,40 430,70 436,86"/>
+    <path d="M482,110 H508"/><path d="M556,88 V64"/>
+    <path d="M602,34 C614,34 616,24 626,23"/><path d="M602,42 C614,42 616,64 626,65"/>
+    <path d="M602,110 H626"/><path d="M671,124 V130"/><path d="M602,124 C614,150 612,188 626,191"/>
+  </g>
+  <path d="M242,182 C330,230 470,220 548,134" stroke="#9fb3c4" stroke-dasharray="3 3" fill="none" marker-end="url(#a)"/>
+  <g font-size="9" fill="#444">
+    <rect x="150" y="226" width="10" height="10" fill="#eaf2f8" stroke="#2f6f95"/><text x="165" y="235">transformation</text>
+  </g>
+  <rect x="440" y="226" width="10" height="10" fill="#fbeee6" stroke="#b9531f"/><text x="455" y="235" font-size="9" fill="#444">contrôle bloquant</text>
+  <rect x="560" y="226" width="10" height="10" fill="#f1f3f5" stroke="#6b7c8c"/><text x="575" y="235" font-size="9" fill="#444">rapports</text>
+</svg>
+<div class="fig-cap">Figure 1 – Graphe des étapes déclarées dans <code>dvc.yaml</code> (obtenu aussi par <code>dvc dag</code>). En pointillés : l'index des images alimente aussi <code>align</code>.</div>
+</div>
+
+<table>
+  <tr><th>Étape</th><th>Ce qu'elle fait</th><th>Sortie</th></tr>
+  <tr><td><code>ingest</code></td><td>Lit le CSV, les boîtes englobantes et les listes officielles. Le CSV a un en-tête cassé (« OriginalImage[Width,Height] » coupé par la virgule, colonne vide finale) : on renomme par position plutôt que par nom.</td><td>3 tables Parquet</td></tr>
+  <tr><td><code>index_images</code></td><td>Liste les fichiers des 12 dossiers (nom, dossier, taille). Ouvre 300 images tirées au hasard pour lire dimensions et mode. Inventorie aussi le jeu pédiatrique.</td><td>manifeste, contrôles</td></tr>
+  <tr><td><code>validate_raw</code></td><td>Contrôles sur les données telles qu'elles arrivent (section 2.5).</td><td>JSON de résultats</td></tr>
+  <tr><td><code>preprocess</code></td><td>Répare les âges hors [1, 100] par la médiane (49 ans) en gardant un indicateur, normalise sexe et vue, éclate les labels en 14 colonnes binaires.</td><td>table nettoyée</td></tr>
+  <tr><td><code>align</code></td><td>Jointure image ↔ ligne clinique sur le nom de fichier ; crée le masque <code>has_image</code> / <code>has_tabular</code>.</td><td>table alignée</td></tr>
+  <tr><td><code>split</code></td><td>Garde le test officiel, tire 10 % des <i>patients</i> du train_val pour la validation.</td><td><code>dataset.parquet</code></td></tr>
+  <tr><td><code>validate</code></td><td>Fuite de patients, cohérence des labels et des modalités, écarts de prévalence.</td><td>JSON de résultats</td></tr>
+  <tr><td><code>analyze</code>, <code>report</code>, <code>examples</code>, <code>dashboard</code>, <code>drift</code></td><td>Mesures pour la Partie B, statistiques, rapport qualité HTML, tableau de bord, comparaison avec la version de référence.</td><td>JSON, HTML</td></tr>
+</table>
+
+<p>Les dossiers d'images ne sont pas déclarés comme dépendances DVC. C'est un choix délibéré : DVC
+devrait sinon calculer l'empreinte de 45&nbsp;Go à chaque <code>dvc status</code>, ce qui prend plusieurs
+minutes pour une donnée qui ne change jamais. Leur intégrité est vérifiée autrement, par le manifeste et
+les contrôles de <code>validate_raw</code> : si une image disparaît, la couverture tombe sous 100 % et le
+pipeline s'arrête.</p>
+
+<h2>2.3 Configuration externalisée</h2>
+<p>Aucun script ne contient de chemin ni de seuil. Tout est dans <code>configs/params.yaml</code>,
+organisé par section : <code>paths</code>, <code>ingest</code>, <code>images</code> (taille attendue,
+modes autorisés, nombre d'images contrôlées), <code>preprocess</code> (bornes d'âge, liste des
+pathologies), <code>split</code>, <code>quality</code> (seuils), <code>drift</code>, et deux sections
+réservées, <code>fusion</code> et <code>tracking</code>. Le fichier <code>sample.yaml</code> déclare
+<code>extends: params.yaml</code> et ne remplace que les chemins et la taille d'image (128×128 dans
+l'échantillon). Nous n'avons pas utilisé Hydra : un chargeur de 40 lignes avec fusion récursive suffit et
+évite une dépendance de plus.</p>
+<p>Dans <code>dvc.yaml</code>, chaque étape déclare les clés de paramètres qu'elle lit. Modifier
+<code>split.val_fraction</code> relance <code>split</code> et ce qui en dépend ; modifier
+<code>quality.max_invalid_age_rate</code> ne relance que les deux validations. Nous l'avons vérifié :
+après un <code>dvc repro</code> complet, un second appel répond « Data and pipelines are up to date » sans
+rien exécuter.</p>
+
+<h2>2.4 Versionnement des données</h2>
+<table>
+  <tr><th>Quoi</th><th>Où</th><th>Pourquoi</th></tr>
+  <tr><td>Code, configuration, <code>dvc.yaml</code>, <code>dvc.lock</code>, rapports JSON</td><td>Git</td><td>Petits fichiers texte, à relire en revue.</td></tr>
+  <tr><td>Métadonnées brutes (9,5 Mo), tables intermédiaires et finales</td><td>DVC, stockage <code>shared</code></td><td>Données, donc hors Git ; versions liées au commit par <code>dvc.lock</code>.</td></tr>
+  <tr><td>Échantillon de 40 patients (0,9 Mo)</td><td>Git</td><td>La CI doit pouvoir s'exécuter sans accès au stockage.</td></tr>
+  <tr><td>Images (45 Go + 2,3 Go)</td><td>Kaggle, non copiées</td><td>Immuables, déjà hébergées publiquement ; les dupliquer dans un cache DVC doublerait l'espace disque.</td></tr>
+</table>
+<p>Le stockage distant est un dossier partagé : sur nos machines, un dossier Google Drive synchronisé par
+l'application Drive. DVC le voit comme un dossier local. Chaque membre indique son propre chemin avec
+<code>dvc remote modify --local shared url …</code>, écrit dans <code>.dvc/config.local</code> qui n'est
+pas versionné. Nous avons écarté le remote Google Drive natif de DVC : depuis 2024 il demande de créer
+son propre projet Google Cloud et un compte de service, ce qui est disproportionné pour un binôme. Pour un
+tiers, la procédure complète est dans le README : <code>git clone</code>, réglage du remote,
+<code>dvc pull</code>, puis téléchargement des images depuis Kaggle. Sans accès au dossier partagé, il
+suffit de copier les quatre fichiers de métadonnées du téléchargement NIH dans <code>data/raw/nih/</code> :
+<code>dvc repro</code> refait le reste en une dizaine de secondes.</p>
+
+<h2>2.5 Tests de qualité des données</h2>
+<p>Les contrôles ont deux niveaux. Un contrôle <b>critique</b> qui échoue lève une exception, l'étape
+s'arrête avec le code 1 et DVC n'exécute pas les étapes suivantes. Une <b>alerte</b> est écrite dans le
+rapport sans arrêter le pipeline. Les schémas sont écrits avec pandera ; les contrôles plus métier
+(fuite, couverture) sont des fonctions pandas courtes, plus lisibles qu'un schéma pour ce genre de règle.</p>
+<table>
+  <tr><th>Catégorie</th><th>Contrôle</th><th>Seuil</th><th class="n">Résultat (complet)</th></tr>
+  <tr><td rowspan="3">Schéma / types</td><td>Table clinique brute : 11 colonnes exactes, types, nom d'image <code>\d{8}_\d{3}.png</code> unique, sexe ∈ {M, F}, vue ∈ {PA, AP}</td><td>0 échec</td><td class="n ok">OK</td></tr>
+  <tr><td>Images : dimensions 1024×1024 (sur 300 tirées)</td><td>≤ 1 % hors format</td><td class="n ok">0 %</td></tr>
+  <tr><td>Images : mode niveaux de gris (L ou RGBA)</td><td>0 autre</td><td class="n ok">298 L, 2 RGBA</td></tr>
+  <tr><td rowspan="3">Manquants, doublons, aberrants</td><td>Manquants sur les colonnes clés</td><td>0 %</td><td class="n ok">0 %</td></tr>
+  <tr><td>Doublons de nom d'image</td><td>0</td><td class="n ok">0</td></tr>
+  <tr><td>Âges hors [1, 100] avant réparation</td><td>≤ 0,1 %</td><td class="n ok">0,014 % (16)</td></tr>
+  <tr><td rowspan="4">Cohérence inter-modalités</td><td>Chaque ligne clinique a son image sur disque</td><td>100 %</td><td class="n ok">100 %</td></tr>
+  <tr><td>Chaque boîte englobante pointe vers une image connue</td><td>0 orpheline</td><td class="n ok">0</td></tr>
+  <tr><td>Masque <code>has_image</code> conforme au dossier trouvé ; échantillons complets</td><td>100 %</td><td class="n ok">100 %</td></tr>
+  <tr><td>Images sans ligne clinique (alerte)</td><td>0</td><td class="n ok">0</td></tr>
+  <tr><td rowspan="2">Fuite</td><td>Listes officielles disjointes et complètes</td><td>0</td><td class="n ok">0</td></tr>
+  <tr><td>Patients présents dans plus d'un ensemble</td><td>0</td><td class="n ok">0</td></tr>
+  <tr><td rowspan="2">Labels</td><td>« No Finding » exclusif, <code>n_findings</code> = somme des labels</td><td>0 incohérence</td><td class="n ok">OK</td></tr>
+  <tr><td>Écart de prévalence val / test (alerte)</td><td>≤ 5 points</td><td class="n warn">7,4 points</td></tr>
+</table>
+<p>L'alerte de la dernière ligne n'est pas un bug, et c'est sans doute le résultat le plus utile de cette
+partie. Le test officiel NIH a été construit en réservant des patients entiers, et il se trouve que ce sont
+des patients beaucoup plus suivis : 20 radios de suivi en moyenne contre 5 en train, 56,6 % de clichés AP
+contre 34,8 %, et 10,4 % de pneumothorax contre 3,0 %. Notre validation, tirée dans le train_val, ressemble
+au train et pas au test. Les scores de validation seront donc optimistes, et il faudra le dire quand nous
+publierons nos résultats.</p>
+<p>Nous ne voulions pas des tests qui passent toujours. Les tests <code>test_data_quality.py</code>
+corrompent volontairement une copie des données (patient déplacé d'un ensemble à l'autre, image supprimée,
+doublon, sexe « X », dimensions fausses, label positif sur une image « No Finding ») et vérifient que le bon
+contrôle échoue. Le script <code>scripts/demo_quality_failure.py</code> fait la même chose de bout en bout
+pour la démonstration :</p>
+<pre>$ python scripts/demo_quality_failure.py --fault leak
+-> 00000147_000.png déplacée de test vers train_val (patient 147)
+[validate] FAIL fuite de patients entre train/val/test (valeur=1, seuil=0)
+PIPELINE ARRÊTÉ : contrôle(s) critique(s) en échec : ['fuite de patients entre train/val/test']
+code de sortie : 1 (arrêt attendu)</pre>
+
+<h2>2.6 Reproductibilité</h2>
+<ul>
+  <li><b>Graine fixée</b> (<code>seed: 42</code>) pour le tirage des patients de validation et des images contrôlées. Le tirage trie d'abord les identifiants : l'ordre de lecture du disque n'a plus d'influence.</li>
+  <li><b>Dépendances figées</b> dans <code>requirements.txt</code> (versions exactes) ; torch et MLflow à part dans <code>requirements-dl.txt</code> pour que la CI des données reste légère.</li>
+  <li><b>Test explicite</b> : <code>test_rerun_is_reproducible</code> relance l'étape <code>split</code> et compare la table produite à la précédente.</li>
+  <li><b>Docker</b> (bonus) : l'image <code>python:3.13-slim</code> installe les dépendances et exécute le pipeline sur l'échantillon ; les images complètes se montent en volume.</li>
+</ul>
+
+<h2>2.7 Observabilité et traçabilité</h2>
+<p>Chaque étape s'exécute dans un contexte qui chronomètre, journalise et écrit une fiche
+<code>reports/stages/&lt;etape&gt;.json</code> : volumes en entrée et en sortie, nombre de lignes
+rejetées ou réparées, durée, empreinte MD5 de chaque fichier lu et écrit, commit Git et fichier de
+configuration. Avec ces fiches, on peut remonter de n'importe quelle table produite aux fichiers
+sources exacts qui l'ont générée. Les mêmes événements partent en JSON lines dans
+<code>logs/pipeline.jsonl</code>, ce qui permet de les filtrer ou de les charger dans un outil de suivi.</p>
+<p>L'étape <code>report</code> produit un rapport qualité HTML autonome (bonus) qui reprend tous les
+contrôles, leurs valeurs, leurs seuils et la durée de chaque étape. La fiche de données
+(<code>docs/DATA_CARD.md</code>) décrit les sources, licences, volumes, prétraitements, biais connus et
+usages à éviter. Enfin, l'étape <code>drift</code> (bonus) résume la version courante (déciles d'âge,
+sexe, vue, ensembles, prévalence des 14 classes) et la compare à un profil de référence enregistré avec
+l'indice de stabilité de population (PSI) : en dessous de 0,10 la distribution est stable, au-dessus de
+0,25 on parle de dérive. Ce sera utile le jour où nous ajouterons une autre source (MIMIC-CXR par exemple).</p>
+
+<h2>2.8 Intégration continue</h2>
+<p>Le workflow <code>.github/workflows/ci.yml</code> tourne sur chaque push et chaque pull request :</p>
+<ol>
+  <li>installation de Python 3.13, de <code>requirements.txt</code> et de torch CPU ;</li>
+  <li><code>ruff check .</code> (lint et ordre des imports) ;</li>
+  <li><code>dvc dag</code>, qui échoue si <code>dvc.yaml</code> est mal formé ou contient un cycle ;</li>
+  <li>le pipeline complet sur <code>data/sample</code> (≈ 3 s) ;</li>
+  <li><code>pytest</code> : 17 tests unitaires, de données et du prototype de fusion ;</li>
+  <li>l'échec contrôlé, qui doit renvoyer le code 1 (sinon la CI échoue : un contrôle qui ne bloque plus est une régression) ;</li>
+  <li>publication des rapports de l'échantillon en artefact du run.</li>
+</ol>
+
+<h2>2.9 Choix des outils</h2>
+<table>
+  <tr><th>Besoin</th><th>Choix</th><th>Raison</th></tr>
+  <tr><td>Versionnement des données</td><td>DVC</td><td>S'appuie sur Git, gère aussi l'orchestration ; LakeFS demande un serveur. Git LFS est déconseillé pour ces volumes.</td></tr>
+  <tr><td>Orchestration</td><td>DVC pipelines</td><td>Relance incrémentale native et lien direct avec les versions de données. Airflow ou Prefect seraient surdimensionnés pour un pipeline de 9 s sur une seule machine.</td></tr>
+  <tr><td>Validation</td><td>pandera + pytest</td><td>Schémas déclaratifs en Python, rapport d'erreurs exploitable. Great Expectations demande beaucoup de configuration pour peu de règles.</td></tr>
+  <tr><td>Configuration</td><td>YAML + chargeur maison</td><td>Héritage simple suffisant, une dépendance de moins que Hydra.</td></tr>
+  <tr><td>CI</td><td>GitHub Actions</td><td>Le dépôt est sur GitHub, gratuit pour un dépôt public.</td></tr>
+  <tr><td>Suivi d'expériences</td><td>MLflow (préparé)</td><td>Fonctionne en local sans compte, contrairement à W&amp;B.</td></tr>
+  <tr><td>Format</td><td>Parquet</td><td>Types conservés, 1,7 Mo contre 14,8 Mo en CSV pour la table finale.</td></tr>
+</table>
+
+<h2>2.10 Préparer la suite</h2>
+<p>Les étapes <code>extract_features</code>, <code>train</code> et <code>evaluate</code> sont déjà écrites,
+en commentaire, à la fin de <code>dvc.yaml</code>, avec leurs dépendances. La section <code>tracking</code> de la
+configuration et la fonction <code>start_tracking</code> de <code>src/training/train.py</code> fixent
+l'URI et le nom de l'expérience MLflow. Le Dataset PyTorch (<code>src/fusion/dataset.py</code>) lit
+directement la table produite par le pipeline, avec son masque de modalités.</p>
+
+<!-- ===================================================================== -->
+<h1>3. État de l'art de la fusion multimodale</h1>
+
+<p>Baltrušaitis et al. [1] distinguent cinq problèmes en apprentissage multimodal : représentation,
+traduction, alignement, fusion et co-apprentissage. Nous nous intéressons ici à la fusion, c'est-à-dire
+à la façon de combiner les modalités pour prédire. La revue de Huang et al. [13], centrée sur l'imagerie
+médicale et le dossier patient, montre que la question se pose surtout en ces termes : à quel moment du
+réseau combiner, et avec quel opérateur.</p>
+
+<h2>3.1 Les trois niveaux de fusion</h2>
+<p><b>Fusion précoce.</b> On combine les modalités avant le modèle principal : soit les données brutes
+(par exemple en ajoutant l'âge comme canal constant de l'image), soit des caractéristiques extraites
+séparément puis concaténées et données à un seul classifieur. C'est simple et cela laisse le modèle
+apprendre toutes les interactions, mais les représentations doivent être compatibles en échelle et en
+dimension. Coller 4 nombres à 50&nbsp;000 pixels ne fonctionne pas : le signal clinique est noyé.</p>
+<p><b>Fusion tardive.</b> On entraîne un modèle par modalité et on combine les prédictions : vote,
+moyenne pondérée, ou un méta-modèle appris (stacking). C'est modulaire, robuste à l'absence d'une
+modalité (on utilise le modèle restant), et la contribution de chacune se lit dans les poids. En
+revanche, aucune interaction fine n'est possible : le modèle image ne peut pas interpréter une
+silhouette cardiaque différemment selon la vue.</p>
+<p><b>Fusion intermédiaire (ou hybride).</b> Chaque modalité a son encodeur, et les représentations
+latentes sont combinées à l'intérieur du réseau, entraîné de bout en bout. C'est le cadre le plus
+utilisé aujourd'hui, et celui où se placent presque tous les mécanismes ci-dessous. Le prix à payer est
+un entraînement plus délicat (une modalité peut dominer) et une interprétabilité plus faible.</p>
+
+<h2>3.2 Mécanismes de fusion</h2>
+<p><b>Concaténation, somme, produit.</b> La concaténation <i>z</i> = [<i>h</i><sub>A</sub> ; <i>h</i><sub>B</sub>]
+suivie d'un MLP est la base de référence. La somme pondérée impose des dimensions égales ; le produit
+élément par élément (<i>h</i><sub>A</sub> ⊙ <i>h</i><sub>B</sub>) introduit une interaction
+multiplicative sans augmenter la dimension.</p>
+<p><b>Gated Multimodal Unit (GMU)</b> [4]. Une porte <i>z</i> = σ(<i>W</i><sub>z</sub>[<i>x</i><sub>A</sub> ; <i>x</i><sub>B</sub>])
+décide, pour chaque dimension et chaque exemple, de la part de chaque modalité :
+<i>h</i> = <i>z</i> ⊙ tanh(<i>W</i><sub>A</sub><i>x</i><sub>A</sub>) + (1 − <i>z</i>) ⊙ tanh(<i>W</i><sub>B</sub><i>x</i><sub>B</sub>).
+Peu coûteux, et la porte se lit comme une mesure de contribution.</p>
+<p><b>FiLM</b> [5]. Une modalité « conditionne » l'autre : elle produit, pour chaque canal d'une carte de
+caractéristiques, un gain γ et un biais β, et la carte devient γ ⊙ <i>F</i> + β. Conçu pour le
+raisonnement visuel guidé par une question, FiLM convient quand une modalité courte doit changer la façon
+de lire une modalité riche. Le coût est une couche linéaire.</p>
+<p><b>Tensor Fusion Network (TFN)</b> [2]. On calcule le produit extérieur des représentations, chacune
+augmentée d'un 1 : (<i>h</i><sub>A</sub> ⊕ 1) ⊗ (<i>h</i><sub>B</sub> ⊕ 1). On obtient toutes les
+interactions unimodales, bimodales (et trimodales pour trois modalités), mais la dimension explose :
+1025 × 65 ≈ 67&nbsp;000 pour nos dimensions. <b>LMF</b> [3] factorise le tenseur de poids en rang faible
+<i>r</i> et ramène le coût à une somme de <i>r</i> produits de projections, avec des résultats proches.</p>
+<p><b>Pooling bilinéaire compact (MCB, MFB)</b> [14, 15]. Même idée d'interactions d'ordre deux,
+approximées par projection aléatoire (Count Sketch + FFT pour MCB) ou par factorisation (MFB). Très
+utilisés en question-réponse visuelle, quand les deux modalités sont de grande dimension.</p>
+<p><b>Attention croisée et transformers multimodaux.</b> Les tokens d'une modalité servent de requêtes
+sur les tokens de l'autre : softmax(<i>Q</i><sub>A</sub><i>K</i><sub>B</sub><sup>⊤</sup>/√<i>d</i>)<i>V</i><sub>B</sub>
+[16]. Le Multimodal Transformer [6] le fait dans les deux sens et gère des séquences non alignées.
+C'est le mécanisme le plus expressif, mais il suppose des séquences de tokens des deux côtés et beaucoup
+de données ; les paires de modalités coûtent en O(<i>n·m</i>).</p>
+<p><b>Goulots d'attention</b> [7]. Les modalités n'échangent qu'à travers un petit nombre de tokens
+partagés, ce qui force à condenser l'information et réduit le coût de l'attention croisée complète.</p>
+<p><b>Alignement contrastif (CLIP)</b> [8]. Deux encodeurs projettent les paires dans un espace commun
+et une perte contrastive rapproche les paires correspondantes. C'est une méthode de pré-entraînement plus
+que de fusion : elle suppose deux modalités riches et sémantiquement équivalentes (image et texte), avec
+des centaines de milliers de paires.</p>
+<p><b>Fusion par graphes.</b> Les modalités ou les échantillons deviennent des nœuds, et un réseau de
+graphe [17] propage l'information. Pertinent quand la relation entre entités est connue (patients
+similaires, régions anatomiques), plus difficile à mettre en œuvre.</p>
+
+<h2>3.3 Difficultés propres au multimodal</h2>
+<ul>
+  <li><b>Hétérogénéité</b> : une carte 1024×7×7 d'un côté, 4 scalaires de l'autre ; il faut des encodeurs et des projections propres à chaque modalité.</li>
+  <li><b>Alignement</b> : temporel (vidéo et audio) ou sémantique (mot et région d'image). Dans notre cas, il est donné par la clé <code>image</code>.</li>
+  <li><b>Modalités manquantes à l'inférence</b> : la fusion tardive s'en accommode, la fusion intermédiaire demande un jeton « absent » appris ou un entraînement avec suppression aléatoire de modalité (ModDrop [18]).</li>
+  <li><b>Déséquilibre entre modalités</b> : Wang et al. [19] montrent qu'un réseau multimodal fait parfois moins bien que le meilleur unimodal, parce que la modalité qui apprend le plus vite domine et que l'autre est sous-entraînée. Des pertes par modalité ou un mélange de gradients corrigent ce biais.</li>
+  <li><b>Coût de calcul</b> : TFN et l'attention croisée complète sont quadratiques en dimension ou en nombre de tokens.</li>
+  <li><b>Interprétabilité</b> : facile en fusion tardive (poids), possible avec une porte (GMU) ou un conditionnement (FiLM), plus floue avec l'attention profonde.</li>
+</ul>
+
+<h2>3.4 Tableau comparatif</h2>
+<table>
+  <tr><th style="width:15%">Approche</th><th style="width:22%">Principe</th><th style="width:21%">Avantages</th><th style="width:21%">Limites</th><th>Conditions d'usage / réf.</th></tr>
+  <tr><td>Fusion précoce</td><td>Concaténer entrées ou caractéristiques avant un modèle unique</td><td>Simple ; toutes les interactions sont apprenables</td><td>Échelles incompatibles ; la petite modalité est noyée ; pas de modalité manquante</td><td>Modalités de même nature et de même granularité [1]</td></tr>
+  <tr><td>Fusion tardive</td><td>Un modèle par modalité, puis vote, moyenne pondérée ou stacking</td><td>Modulaire ; robuste à l'absence ; contributions lisibles</td><td>Aucune interaction fine entre modalités</td><td>Modalités indépendantes, chacune suffisante ; baseline [1, 13]</td></tr>
+  <tr><td>Intermédiaire – concaténation</td><td>[<i>h</i><sub>A</sub> ; <i>h</i><sub>B</sub>] puis MLP, bout en bout</td><td>Simple ; interactions via le MLP</td><td>Interactions faibles ; domination d'une modalité</td><td>Baseline de référence [13]</td></tr>
+  <tr><td>Intermédiaire – somme / produit pondérés</td><td>Combinaison élément par élément de projections</td><td>Léger ; interaction multiplicative (produit)</td><td>Dimensions égales ; interactions limitées</td><td>Modalités de poids comparable</td></tr>
+  <tr><td>GMU</td><td>Porte sigmoïde qui pondère chaque modalité par dimension</td><td>Peu coûteux ; contribution mesurable</td><td>Reste une combinaison convexe, pas un conditionnement</td><td>Modalités d'utilité variable selon l'exemple [4]</td></tr>
+  <tr><td>FiLM</td><td>Une modalité produit γ, β qui modulent les canaux de l'autre</td><td>Interaction fine pour un coût d'une couche linéaire ; adapté à un contexte court</td><td>Asymétrique ; suppose une modalité « contexte »</td><td>Modalité courte qui change l'interprétation d'une modalité riche [5]</td></tr>
+  <tr><td>TFN / LMF</td><td>Produit extérieur des représentations (LMF : rang faible)</td><td>Interactions explicites d'ordre 1 à <i>M</i></td><td>Dimension explosive (TFN) ; LMF plus léger</td><td>Peu de modalités de petite dimension [2, 3]</td></tr>
+  <tr><td>Pooling bilinéaire (MCB, MFB)</td><td>Interactions d'ordre 2 approchées (sketch, factorisation)</td><td>Expressif ; plus léger que le bilinéaire exact</td><td>Hyperparamètres sensibles ; peu interprétable</td><td>Deux modalités denses de grande dimension (VQA) [14, 15]</td></tr>
+  <tr><td>Intermédiaire – attention croisée</td><td>Tokens d'une modalité en requêtes sur l'autre</td><td>Le plus expressif ; gère le non-aligné</td><td>Beaucoup de données ; coût O(<i>nm</i>) ; tokens requis des deux côtés</td><td>Séquences riches des deux côtés [6, 16]</td></tr>
+  <tr><td>Goulots d'attention</td><td>Échange via quelques tokens partagés</td><td>Moins coûteux que l'attention complète</td><td>Architecture transformer complète</td><td>Vidéo + audio, grands volumes [7]</td></tr>
+  <tr><td>Alignement contrastif</td><td>Espace commun appris par perte contrastive</td><td>Pré-entraînement puissant ; zéro-shot</td><td>Paires sémantiquement équivalentes, très nombreuses</td><td>Image + texte à grande échelle [8]</td></tr>
+  <tr><td>Fusion par graphes</td><td>Nœuds = modalités ou patients, propagation par GNN</td><td>Exploite des relations connues</td><td>Construction du graphe ; mise en œuvre lourde</td><td>Relations explicites entre entités [17]</td></tr>
+</table>
+
+<!-- ===================================================================== -->
+<h1>4. Choix argumenté de l'approche</h1>
+
+<p>Avant de choisir, nous avons mesuré trois choses sur nos données (étape <code>analyze</code>,
+fichier <code>reports/modality_analysis.json</code>).</p>
+
+<p><b>Ce que vaut la clinique seule.</b> Une régression logistique par pathologie, entraînée sur le train
+avec les quatre variables cliniques, obtient une AUC moyenne de <b>0,66</b> sur la validation. Ce n'est
+pas rien, mais c'est loin des modèles image publiés sur ce jeu (0,74 en moyenne dans l'article d'origine
+[11], 0,84 pour CheXNet [20], sur un découpage différent). Le détail est plus parlant que la moyenne :</p>
+<table>
+  <tr><th>Pathologie</th><th class="n">AUC clinique seule</th><th class="n">Prévalence AP / PA</th><th>Lecture</th></tr>
+  <tr><td>Hernia</td><td class="n">0,86</td><td class="n">0,28</td><td>Surtout liée à l'âge</td></tr>
+  <tr><td>Edema</td><td class="n">0,79</td><td class="n">11,0</td><td>Presque toujours sur cliché AP (patient alité)</td></tr>
+  <tr><td>Fibrosis</td><td class="n">0,72</td><td class="n">0,30</td><td>Âge, suivi long, cliché PA</td></tr>
+  <tr><td>Consolidation</td><td class="n">0,71</td><td class="n">3,1</td><td>Vue AP</td></tr>
+  <tr><td>Effusion</td><td class="n">0,68</td><td class="n">1,5</td><td></td></tr>
+  <tr><td>Cardiomegaly</td><td class="n">0,58</td><td class="n">1,2</td><td>Information dans l'image</td></tr>
+  <tr><td>Mass</td><td class="n">0,53</td><td class="n">0,93</td><td>Clinique inutile</td></tr>
+</table>
+<p>La clinique n'est donc ni inutile ni suffisante, et son utilité dépend fortement de la pathologie.</p>
+
+<p><b>La vue change le sens de l'image.</b> Un cliché AP est pris de face, source proche, souvent au lit :
+le cœur y paraît agrandi par effet de projection, et les patients sont plus graves. Edema est 11 fois plus
+fréquent en AP qu'en PA, Consolidation 3 fois. C'est exactement la situation où une même caractéristique
+visuelle (une silhouette cardiaque large, une opacité diffuse) ne doit pas être interprétée de la même
+manière selon le contexte.</p>
+
+<p><b>Le contexte peut aussi être un raccourci.</b> Le numéro de suivi vaut 20 en moyenne dans le test
+contre 5 en train ; la vue AP passe de 34,8 % à 56,6 %. Un modèle qui s'appuie trop sur ces variables
+apprend « patient grave » plutôt que « épanchement visible ». Zech et al. [21] ont montré ce genre de
+dérive sur des radiographies issues de plusieurs hôpitaux. L'architecture doit donc laisser la clinique
+moduler l'image sans pouvoir s'y substituer.</p>
+
+<table>
+  <tr><th style="width:19%">Critère</th><th style="width:45%">Ce que montrent nos données</th><th>Conséquence</th></tr>
+  <tr><td>Nature des modalités</td><td>Image 1024×1024 (carte 1024×7×7 après DenseNet) contre 4 scalaires. Pas de séquence côté clinique.</td><td>Fusion précoce exclue ; TFN, MCB et attention croisée surdimensionnés pour 4 valeurs.</td></tr>
+  <tr><td>Alignement</td><td>Appariement 1 pour 1 par nom de fichier, vérifié à 100 % par le pipeline. Pas de temporalité.</td><td>Aucun module d'alignement nécessaire.</td></tr>
+  <tr><td>Interactions</td><td>La vue et l'âge changent la prévalence et l'aspect visuel (Edema ×11 en AP).</td><td>Il faut une interaction fine, que la fusion tardive ne permet pas.</td></tr>
+  <tr><td>Modalités manquantes</td><td>0 % en entraînement. En production, la vue ou l'âge peuvent manquer (DICOM incomplet, autre hôpital).</td><td>Jeton « clinique absente » appris + suppression aléatoire à l'entraînement.</td></tr>
+  <tr><td>Volume</td><td>77 724 images d'entraînement, 14 classes très déséquilibrées (Hernia : 127 positifs en train).</td><td>Encodeur pré-entraîné affiné ; pas assez pour un transformer multimodal entraîné de zéro.</td></tr>
+  <tr><td>Calcul</td><td>GPU Kaggle (T4 ou P100, quota hebdomadaire de 30 h).</td><td>DenseNet-121 en 224×224 ; module de fusion de quelques centaines de milliers de paramètres.</td></tr>
+  <tr><td>Interprétabilité</td><td>Contexte médical : il faut savoir si la décision vient de l'image ou du contexte.</td><td>Mécanisme dont la contribution se mesure (porte, γ/β), tête auxiliaire image seule.</td></tr>
+</table>
+
+<div class="box">
+<b>Choix retenu : fusion intermédiaire par conditionnement FiLM de la carte visuelle par la clinique,
+suivie d'une porte apprise (type GMU) qui dose l'apport direct du vecteur clinique.</b> FiLM répond au
+besoin d'interaction (la vue règle la lecture de l'image) pour un coût négligeable ; la porte rend
+mesurable la part de la clinique ; une perte auxiliaire image seule et la suppression aléatoire de la
+clinique empêchent le raccourci « vue AP = malade ». L'attention croisée est gardée comme variante dans
+les ablations, la concaténation et la fusion tardive comme baselines.
+</div>
+
+<!-- ===================================================================== -->
+<h1>5. Architecture et algorithmes proposés</h1>
+
+<h2>5.1 Schéma d'architecture</h2>
+<div class="fig">
+<svg viewBox="0 0 720 300" width="100%" font-family="Segoe UI, Arial, sans-serif" font-size="10.5">
+  <defs><marker id="b" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#5a6b7b"/></marker></defs>
+  <rect x="8" y="30" width="96" height="70" rx="4" fill="#f4f6f8" stroke="#9fb3c4"/>
+  <text x="56" y="58" text-anchor="middle" font-weight="600">Radiographie</text><text x="56" y="73" text-anchor="middle" fill="#555">3×224×224</text><text x="56" y="88" text-anchor="middle" fill="#555" font-size="9">niveaux de gris</text>
+  <rect x="8" y="200" width="96" height="70" rx="4" fill="#f4f6f8" stroke="#9fb3c4"/>
+  <text x="56" y="223" text-anchor="middle" font-weight="600">Clinique c</text><text x="56" y="238" text-anchor="middle" fill="#555" font-size="9">âge norm., sexe,</text><text x="56" y="251" text-anchor="middle" fill="#555" font-size="9">AP, log(1+suivi)</text><text x="56" y="264" text-anchor="middle" fill="#555" font-size="9">+ masque m</text>
+  <rect x="130" y="30" width="118" height="70" rx="4" fill="#eaf2f8" stroke="#2f6f95"/>
+  <text x="189" y="55" text-anchor="middle" font-weight="600">DenseNet-121</text><text x="189" y="70" text-anchor="middle" fill="#555" font-size="9">ImageNet, affiné</text><text x="189" y="88" text-anchor="middle" fill="#2f6f95">F : 1024×7×7</text>
+  <rect x="130" y="200" width="118" height="70" rx="4" fill="#eaf2f8" stroke="#2f6f95"/>
+  <text x="189" y="222" text-anchor="middle" font-weight="600">MLP 4→64→64</text><text x="189" y="238" text-anchor="middle" fill="#555" font-size="9">si m = 0 : t = t_absent</text><text x="189" y="258" text-anchor="middle" fill="#2f6f95">t : 64</text>
+  <rect x="276" y="118" width="110" height="56" rx="4" fill="#fbeee6" stroke="#b9531f"/>
+  <text x="331" y="140" text-anchor="middle" font-weight="600">FiLM</text><text x="331" y="156" text-anchor="middle" fill="#555" font-size="9">γ, β = W t (init. 0)</text>
+  <rect x="276" y="30" width="110" height="70" rx="4" fill="#fbeee6" stroke="#b9531f"/>
+  <text x="331" y="55" text-anchor="middle" font-weight="600">F' = (1+γ)⊙F + β</text><text x="331" y="72" text-anchor="middle" fill="#555" font-size="9">puis moyenne spatiale</text><text x="331" y="88" text-anchor="middle" fill="#2f6f95">v : 1024</text>
+  <rect x="414" y="88" width="118" height="84" rx="4" fill="#fbeee6" stroke="#b9531f"/>
+  <text x="473" y="110" text-anchor="middle" font-weight="600">Porte</text><text x="473" y="126" text-anchor="middle" font-size="9" fill="#555">g = σ(W_g [v ; t])</text><text x="473" y="142" text-anchor="middle" font-size="9" fill="#555">z = P_v v + g ⊙ P_t t</text><text x="473" y="160" text-anchor="middle" fill="#2f6f95">z : 256</text>
+  <rect x="560" y="96" width="150" height="62" rx="4" fill="#eaf2f8" stroke="#2f6f95"/>
+  <text x="635" y="118" text-anchor="middle" font-weight="600">Tête</text><text x="635" y="134" text-anchor="middle" font-size="9" fill="#555">Dropout 0,2 + Linéaire 256→14</text><text x="635" y="150" text-anchor="middle" font-size="9" fill="#555">ŷ : 14 logits (sigmoïdes)</text>
+  <rect x="560" y="10" width="150" height="54" rx="4" fill="#f1f3f5" stroke="#6b7c8c" stroke-dasharray="4 3"/>
+  <text x="635" y="31" text-anchor="middle" font-weight="600">Tête auxiliaire</text><text x="635" y="48" text-anchor="middle" font-size="9" fill="#555">GAP(F) → 14 (image seule)</text>
+  <g stroke="#5a6b7b" fill="none" marker-end="url(#b)">
+    <path d="M104,65 H128"/><path d="M104,235 H128"/><path d="M248,65 H274"/>
+    <path d="M248,225 C266,225 266,160 274,155"/><path d="M331,118 V102"/>
+    <path d="M386,65 C404,65 400,110 412,112"/><path d="M248,245 C360,250 420,200 450,174"/>
+    <path d="M532,128 H558"/><path d="M248,50 C330,10 480,30 558,36"/>
+  </g>
+  <text x="380" y="285" font-size="9.5" fill="#444">Paramètres hors encodeur image : ≈ 0,7 M · encodeur DenseNet-121 : 7,0 M</text>
+</svg>
+<div class="fig-cap">Figure 2 – Architecture retenue (prototype : <code>src/fusion/model.py</code>, classe <code>ChestXrayFusionNet</code>).</div>
+</div>
+<p><b>Encodeur image.</b> DenseNet-121 pré-entraîné sur ImageNet, utilisé dans CheXNet [20] et donc éprouvé sur
+ce jeu ; nous retirons sa tête et gardons la carte 1024×7×7. Il est affiné, avec un taux d'apprentissage
+dix fois plus faible que le reste. Pour accélérer les premiers essais, la Tâche 4 commencera avec
+l'encodeur figé et des cartes mises en cache (étape <code>extract_features</code>).<br>
+<b>Encodeur clinique.</b> MLP 4 → 64 → 64 avec ReLU. L'encodage (âge centré-réduit, sexe, AP, log(1 + suivi))
+est le même que dans l'étape <code>analyze</code>, pour que les mesures de la section 4 restent comparables.<br>
+<b>Fusion.</b> FiLM sur la dernière carte, puis moyenne spatiale, puis porte (<i>d</i> = 256).<br>
+<b>Tête.</b> Dropout 0,2 et une couche linéaire vers 14 logits.</p>
+
+<h2>5.2 Description formelle du module de fusion</h2>
+<p>Pour un exemple, <i>x</i> est l'image, <i>c</i> ∈ ℝ<sup>4</sup> les variables cliniques et
+<i>m</i> ∈ {0, 1} le masque de présence de la clinique.</p>
+<div class="eq">
+<i>F</i> = <i>E</i><sub>img</sub>(<i>x</i>) ∈ ℝ<sup>C×H×W</sup>, &nbsp; <i>C</i> = 1024, <i>H</i> = <i>W</i> = 7<br>
+<i>t</i> = <i>m</i> · <i>E</i><sub>tab</sub>(<i>c</i>) + (1 − <i>m</i>) · <i>t</i><sub>∅</sub> ∈ ℝ<sup>64</sup> &nbsp;&nbsp; (<i>t</i><sub>∅</sub> appris)<br>
+[γ ; β] = <i>W</i><sub>f</sub> <i>t</i> + <i>b</i><sub>f</sub>, &nbsp; γ, β ∈ ℝ<sup>C</sup>, &nbsp; <i>W</i><sub>f</sub> et <i>b</i><sub>f</sub> initialisés à 0<br>
+<i>F</i>′<sub>k,i,j</sub> = (1 + γ<sub>k</sub>) <i>F</i><sub>k,i,j</sub> + β<sub>k</sub><br>
+<i>v</i> = (1 / <i>HW</i>) Σ<sub>i,j</sub> <i>F</i>′<sub>:,i,j</sub> ∈ ℝ<sup>C</sup><br>
+<i>g</i> = σ(<i>W</i><sub>g</sub> [<i>v</i> ; <i>t</i>] + <i>b</i><sub>g</sub>) ∈ (0, 1)<sup>256</sup><br>
+<i>z</i> = <i>P</i><sub>v</sub> <i>v</i> + <i>g</i> ⊙ <i>P</i><sub>t</sub> <i>t</i> ∈ ℝ<sup>256</sup><br>
+ŷ = <i>W</i><sub>h</sub> <i>z</i> + <i>b</i><sub>h</sub> ∈ ℝ<sup>14</sup>, &nbsp;&nbsp; ŷ<sub>img</sub> = <i>W</i><sub>a</sub> GAP(<i>F</i>) + <i>b</i><sub>a</sub>
+</div>
+<p>Deux détails comptent. On écrit (1 + γ) plutôt que γ, et on initialise <i>W</i><sub>f</sub> à zéro :
+au départ <i>F</i>′ = <i>F</i>, le réseau se comporte comme un modèle image seule et n'apprend la modulation
+que si elle fait baisser la perte. Cela évite de détruire les caractéristiques pré-entraînées dans les
+premières itérations. Ensuite, la porte <i>g</i> ne s'applique qu'au chemin clinique direct : l'image passe
+toujours. La moyenne de <i>g</i> sur un ensemble de test donne une mesure simple de la part du contexte.</p>
+
+<h2>5.3 Pseudo-algorithme</h2>
+<pre>Entrées : batch {x, c, m, y} issu de data/processed/dataset.parquet (ChestXrayDataset)
+          encodeurs E_img, E_tab ; jeton t_∅ ; module FiLM+porte F ; têtes H, H_aux
+          p_drop = 0,2 ; λ = 0,3 ; pos_weight w ∈ R^14
+
+Passe avant
+ 1. Fmap ← E_img(x)                               # Fmap ∈ R^{B×1024×7×7}
+ 2. si entraînement : m ← m ⊙ Bernoulli(1 − p_drop) # suppression aléatoire de la clinique
+ 3. t ← m · E_tab(c) + (1 − m) · t_∅              # t ∈ R^{B×64}
+ 4. γ, β ← découpe(W_f t + b_f)                   # γ, β ∈ R^{B×1024}
+ 5. v ← moyenne_spatiale((1 + γ) ⊙ Fmap + β)      # v ∈ R^{B×1024}
+ 6. g ← σ(W_g [v ; t]) ;  z ← P_v v + g ⊙ P_t t   # z ∈ R^{B×256}
+ 7. ŷ ← H(z) ;  ŷ_img ← H_aux(moyenne_spatiale(Fmap))   # R^{B×14}
+
+Entraînement (une époque)
+ 8. L ← BCE_w(ŷ, y) + λ · BCE_w(ŷ_img, y)
+ 9. rétropropagation ; AdamW (lr 1e-4 encodeur image, 1e-3 reste, décroissance cosinus)
+10. fin d'époque : AUC moyenne sur val ; sauvegarde du meilleur modèle ;
+    journalisation MLflow (paramètres, hash DVC de dataset.parquet, AUC par classe, moyenne de g)</pre>
+
+<h2>5.4 Fonction de perte</h2>
+<div class="eq">
+𝓛 = BCE<sub><i>w</i></sub>(ŷ, <i>y</i>) + λ · BCE<sub><i>w</i></sub>(ŷ<sub>img</sub>, <i>y</i>), &nbsp; λ = 0,3<br>
+BCE<sub><i>w</i></sub>(ŷ, <i>y</i>) = −(1/14) Σ<sub>k</sub> [ <i>w</i><sub>k</sub> <i>y</i><sub>k</sub> log σ(ŷ<sub>k</sub>) + (1 − <i>y</i><sub>k</sub>) log(1 − σ(ŷ<sub>k</sub>)) ], &nbsp;
+<i>w</i><sub>k</sub> = √((<i>N</i> − <i>P</i><sub>k</sub>) / <i>P</i><sub>k</sub>)
+</div>
+<p>Le poids naïf (<i>N</i> − <i>P</i>)/<i>P</i> vaut 611 pour Hernia et 5,3 pour Infiltration : avec ce
+rapport, quelques images de hernie dominent le gradient. La racine carrée ramène l'écart à 24,7 contre 2,3,
+ce qui corrige le déséquilibre sans rendre l'entraînement instable. La perte focale sera testée en
+alternative. La perte auxiliaire image seule joue le rôle de la perte par modalité recommandée par
+Wang et al. [19] : la branche image reste obligée de prédire seule, ce qui empêche la clinique de devenir
+la voie la plus facile. Nous n'ajoutons pas de perte contrastive : nos deux modalités ne décrivent pas la
+même chose (l'âge n'est pas une « légende » de l'image), l'alignement CLIP n'a pas de sens ici.</p>
+
+<h2>5.5 Modalités manquantes et déséquilibre</h2>
+<ul>
+  <li><b>Clinique absente</b> : le masque <i>m</i>, produit par le pipeline (<code>has_tabular</code>), remplace le vecteur par un jeton appris <i>t</i><sub>∅</sub>. Le test <code>test_missing_clinical_data_uses_learned_token</code> vérifie que les valeurs cliniques sont alors bien ignorées.</li>
+  <li><b>Suppression aléatoire</b> (ModDrop [18]) : 20 % des exemples de chaque batch sont entraînés sans clinique. Le modèle reste utilisable si la vue ou l'âge manquent, et ne peut pas compter uniquement sur eux.</li>
+  <li><b>Image absente</b> : elle n'arrive pas dans nos données (couverture 100 %, contrôle bloquant). Sans image, on ne pose pas de diagnostic radiologique : ce cas est refusé plutôt que traité.</li>
+  <li><b>Déséquilibre entre modalités</b> : initialisation de FiLM à l'identité, tête auxiliaire, suppression aléatoire, et suivi de la moyenne de <i>g</i> au fil des époques.</li>
+</ul>
+
+<h2>5.6 Baselines de comparaison</h2>
+<table>
+  <tr><th>Modèle</th><th>Description</th><th>Ce qu'il permet de mesurer</th></tr>
+  <tr><td>B1 – clinique seule</td><td>Régression logistique, puis gradient boosting, sur les 4 variables (déjà fait : AUC 0,66)</td><td>Plancher : ce que le contexte apporte sans l'image</td></tr>
+  <tr><td>B2 – image seule</td><td>DenseNet-121 + tête linéaire, même entraînement</td><td>La référence à battre</td></tr>
+  <tr><td>B3 – fusion tardive</td><td>Moyenne pondérée, puis stacking, des probabilités de B1 et B2</td><td>Apport du contexte sans interaction</td></tr>
+  <tr><td>B4 – concaténation</td><td>[GAP(<i>F</i>) ; <i>t</i>] → MLP, bout en bout</td><td>Fusion intermédiaire la plus simple</td></tr>
+  <tr><td>Proposé</td><td>FiLM + porte + perte auxiliaire + ModDrop</td><td>Apport du conditionnement</td></tr>
+</table>
+
+<h2>5.7 Protocole d'évaluation</h2>
+<p><b>Métriques.</b> AUC-ROC par pathologie et moyenne (la métrique de référence sur NIH), AUC-PR pour
+les classes rares, et calibration (ECE). Résultats rapportés sur le test officiel, avec intervalles de
+confiance par bootstrap <i>par patient</i> (1&nbsp;000 tirages), puisque les images d'un même patient ne
+sont pas indépendantes. Comme vu en section 2.5, l'écart val/test sera rapporté aussi.</p>
+<p><b>Sous-groupes.</b> AUC par sexe, tranche d'âge et vue. Seyyed-Kalantari et al. [22] ont mesuré des
+taux de sous-diagnostic plus élevés chez certains groupes avec des modèles entraînés sur ce jeu ; nous
+voulons vérifier que la fusion n'aggrave pas ces écarts.</p>
+<p><b>Ablations.</b></p>
+<ol>
+  <li>Retrait d'une modalité à l'inférence (<i>m</i> = 0 partout) : la perte de performance mesure la dépendance au contexte.</li>
+  <li>Permutation de la clinique entre exemples du batch : si l'AUC ne bouge pas, la clinique ne sert à rien ; si elle s'effondre, le modèle en dépend trop.</li>
+  <li>Remplacement du module : FiLM seul, porte seule, concaténation, attention croisée (requête clinique sur les 49 positions de la carte 7×7).</li>
+  <li>Sans <code>followup</code> : vérifier que le gain ne vient pas du raccourci « patient très suivi ».</li>
+  <li>Sans perte auxiliaire, sans ModDrop, λ ∈ {0 ; 0,3 ; 1}.</li>
+</ol>
+
+<h2>5.8 Prototype (bonus)</h2>
+<p>Le module complet est implémenté dans <code>src/fusion/model.py</code>, et un Dataset PyTorch lit la
+table du pipeline dans <code>src/fusion/dataset.py</code>. Le fichier <code>tests/test_fusion.py</code>
+charge un vrai batch de 4 radiographies de l'échantillon et vérifie :</p>
+<ul>
+  <li>les dimensions du batch (4×3×224×224, 4×4, 4×14) ;</li>
+  <li>la passe avant : logits 4×14, logits auxiliaires 4×14, porte 4×256 ;</li>
+  <li>la perte finie et un gradient non nul jusqu'aux poids de FiLM ;</li>
+  <li>l'invariance aux valeurs cliniques quand <i>m</i> = 0 ;</li>
+  <li>γ = β = 0 à l'initialisation, et une porte dans (0, 1).</li>
+</ul>
+<p>Les quatre tests passent en local et dans la CI (encodeur non pré-entraîné pour ne pas télécharger les
+poids à chaque exécution).</p>
+
+<!-- ===================================================================== -->
+<h1>6. Plan d'intégration et prochaines étapes</h1>
+<table>
+  <tr><th>Étape</th><th>Changement dans le pipeline</th><th>Tâche</th></tr>
+  <tr><td><code>extract_features</code></td><td>Nouvelle étape DVC après <code>validate</code> : passe DenseNet-121 figé sur toutes les images, met en cache les cartes (ou leur moyenne) dans <code>data/features/</code>. Permet d'itérer sur le module de fusion sans recalculer l'encodeur.</td><td>4</td></tr>
+  <tr><td>Prétraitement image</td><td>Conversion RGBA → L (2 cas sur 300 contrôlés), redimensionnement 224, normalisation ImageNet, augmentation légère en train (rotation ±7°, translation). Paramètres dans la section <code>fusion</code>.</td><td>4</td></tr>
+  <tr><td><code>train</code></td><td>Baselines B1 à B4 puis modèle proposé ; un run MLflow par configuration ; le hash DVC de <code>dataset.parquet</code> est enregistré dans chaque run.</td><td>4</td></tr>
+  <tr><td><code>evaluate</code></td><td>Métriques, sous-groupes et ablations ; <code>reports/eval.json</code> déclaré en métrique DVC pour <code>dvc metrics diff</code> entre versions.</td><td>4-5</td></tr>
+  <tr><td>Contrôles</td><td>Nouveaux contrôles : intégrité des caractéristiques en cache (dimensions, NaN), même ensemble d'images que <code>dataset.parquet</code>.</td><td>4</td></tr>
+  <tr><td>Explicabilité</td><td>Grad-CAM sur la carte modulée <i>F</i>′, analyse de γ par vue (que module la vue AP ?).</td><td>5</td></tr>
+</table>
+
+<p>Ce que nous retenons de cette tâche : le pipeline a déjà rendu service. Sans le contrôle d'écart de
+prévalence, nous aurions sans doute comparé nos modèles sur une validation qui ne ressemble pas au test,
+et sans l'étape d'analyse nous aurions probablement choisi l'attention croisée parce qu'elle est à la
+mode, alors que nos données cliniques tiennent en quatre nombres.</p>
+
+<h2>Références</h2>
+<ol class="ref">
+  <li>T. Baltrušaitis, C. Ahuja, L.-P. Morency, « Multimodal Machine Learning: A Survey and Taxonomy », <i>IEEE TPAMI</i>, 41(2), 2019.</li>
+  <li>A. Zadeh, M. Chen, S. Poria, E. Cambria, L.-P. Morency, « Tensor Fusion Network for Multimodal Sentiment Analysis », <i>EMNLP</i>, 2017.</li>
+  <li>Z. Liu, Y. Shen, V. B. Lakshminarasimhan, P. P. Liang, A. Zadeh, L.-P. Morency, « Efficient Low-rank Multimodal Fusion with Modality-Specific Factors », <i>ACL</i>, 2018.</li>
+  <li>J. Arevalo, T. Solorio, M. Montes-y-Gómez, F. A. González, « Gated Multimodal Units for Information Fusion », <i>ICLR Workshop</i>, 2017.</li>
+  <li>E. Perez, F. Strub, H. de Vries, V. Dumoulin, A. Courville, « FiLM: Visual Reasoning with a General Conditioning Layer », <i>AAAI</i>, 2018.</li>
+  <li>Y.-H. H. Tsai, S. Bai, P. P. Liang, J. Z. Kolter, L.-P. Morency, R. Salakhutdinov, « Multimodal Transformer for Unaligned Multimodal Language Sequences », <i>ACL</i>, 2019.</li>
+  <li>A. Nagrani, S. Yang, A. Arnab, A. Jansen, C. Schmid, C. Sun, « Attention Bottlenecks for Multimodal Fusion », <i>NeurIPS</i>, 2021.</li>
+  <li>A. Radford et al., « Learning Transferable Visual Models From Natural Language Supervision », <i>ICML</i>, 2021.</li>
+  <li>D. Kreuzberger, N. Kühl, S. Hirschl, « Machine Learning Operations (MLOps): Overview, Definition, and Architecture », <i>IEEE Access</i>, 11, 2023.</li>
+  <li>Documentation officielle : DVC (dvc.org/doc), pandera (pandera.readthedocs.io), GitHub Actions (docs.github.com/actions).</li>
+  <li>X. Wang, Y. Peng, L. Lu, Z. Lu, M. Bagheri, R. M. Summers, « ChestX-ray8: Hospital-scale Chest X-ray Database and Benchmarks on Weakly-Supervised Classification and Localization of Common Thorax Diseases », <i>CVPR</i>, 2017.</li>
+  <li>D. S. Kermany et al., « Identifying Medical Diagnoses and Treatable Diseases by Image-Based Deep Learning », <i>Cell</i>, 172(5), 2018.</li>
+  <li>S.-C. Huang, A. Pareek, S. Seyyedi, I. Banerjee, M. P. Lungren, « Fusion of medical imaging and electronic health records using deep learning: a systematic review and implementation guidelines », <i>npj Digital Medicine</i>, 3, 2020.</li>
+  <li>A. Fukui, D. H. Park, D. Yang, A. Rohrbach, T. Darrell, M. Rohrbach, « Multimodal Compact Bilinear Pooling for Visual Question Answering and Visual Grounding », <i>EMNLP</i>, 2016.</li>
+  <li>Z. Yu, J. Yu, J. Fan, D. Tao, « Multi-modal Factorized Bilinear Pooling with Co-Attention Learning for Visual Question Answering », <i>ICCV</i>, 2017.</li>
+  <li>A. Vaswani et al., « Attention Is All You Need », <i>NeurIPS</i>, 2017.</li>
+  <li>T. N. Kipf, M. Welling, « Semi-Supervised Classification with Graph Convolutional Networks », <i>ICLR</i>, 2017.</li>
+  <li>N. Neverova, C. Wolf, G. Taylor, F. Nebout, « ModDrop: Adaptive Multi-Modal Gesture Recognition », <i>IEEE TPAMI</i>, 38(8), 2016.</li>
+  <li>W. Wang, D. Tran, M. Feiszli, « What Makes Training Multi-Modal Classification Networks Hard? », <i>CVPR</i>, 2020.</li>
+  <li>P. Rajpurkar et al., « CheXNet: Radiologist-Level Pneumonia Detection on Chest X-Rays with Deep Learning », arXiv:1711.05225, 2017.</li>
+  <li>J. R. Zech, M. A. Badgeley, M. Liu, A. B. Costa, J. J. Titano, E. K. Oermann, « Variable generalization performance of a deep learning model to detect pneumonia in chest radiographs: A cross-sectional study », <i>PLOS Medicine</i>, 15(11), 2018.</li>
+  <li>L. Seyyed-Kalantari, H. Zhang, M. B. A. McDermott, I. Y. Chen, M. Ghassemi, « Underdiagnosis bias of artificial intelligence algorithms applied to chest radiographs in under-served patient populations », <i>Nature Medicine</i>, 27, 2021.</li>
+  <li>L. Oakden-Rayner, « Exploring Large-scale Public Medical Image Datasets », <i>Academic Radiology</i>, 27(1), 2020.</li>
+</ol>
+
+</body>
+</html>

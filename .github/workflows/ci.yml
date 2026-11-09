@@ -1,0 +1,47 @@
+name: ci
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  pipeline:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+
+      - name: Installation
+        run: |
+          pip install -r requirements.txt
+          pip install torch==2.15.0 torchvision==0.29.2 --index-url https://download.pytorch.org/whl/cpu
+
+      - name: Lint
+        run: ruff check .
+
+      - name: Graphe DVC valide
+        run: dvc dag
+
+      - name: Pipeline sur l'échantillon (data/sample)
+        run: python -m src.cli all --config configs/sample.yaml
+
+      - name: Tests unitaires, tests de données, prototype de fusion
+        run: pytest -v
+
+      - name: Échec contrôlé (le pipeline doit s'arrêter)
+        run: python scripts/demo_quality_failure.py --fault leak
+
+      - name: Rapports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rapports-echantillon
+          path: |
+            build/sample/reports
+            build/sample/outputs
+            build/sample/logs

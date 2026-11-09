@@ -1,0 +1,33 @@
+# Données lourdes : jamais dans Git
+/project deep learning datasets/
+/data/interim/
+/data/processed/
+/data/features/
+/models/
+# DVC gère aussi ses propres .gitignore (data/raw/.gitignore)
+
+# Sorties locales
+/build/
+/logs/
+/mlruns/
+/data_store/*
+!/data_store/.gitkeep
+outputs/*__treated_*
+
+# Python / outils
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+.venv/
+venv/
+
+# Front
+app/web/node_modules/
+
+# Divers
+.claude/
+.vscode/
+.idea/
+~$*
+report/_build.html
